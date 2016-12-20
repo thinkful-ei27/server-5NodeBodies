@@ -7,6 +7,32 @@ const router = express.Router();
 
 router.use(jsonParser);
 
+const passport = require('passport');
+const {BasicStrategy} = require('passport-http');
+
+
+const strategy = new BasicStrategy(
+  (username, password, cb) => {
+    User
+      .findOne({username})
+      .exec()
+      .then(user => {
+        if (!user) {
+          return cb(null, false, {
+            message: 'Incorrect username'
+          });
+        }
+        if (user.password !== password) {
+          return cb(null, false, 'Incorrect password');
+        }
+        return cb(null, user);
+      })
+      .catch(err => cb(err))
+});
+
+passport.use(strategy);
+
+
 router.post('/', (req, res) => {
   if (!req.body) {
     return res.status(400).json({message: 'No request body'});
@@ -60,5 +86,27 @@ router.post('/', (req, res) => {
     })
     .catch(err => res.status(500).json({message: 'Internal server error'}));
 });
+
+const handleAuthentication = (req, res) => {
+  passport.authenticate('basic', {session: true}, (req, res) => {
+    return res.json({username: req.user.username});
+  });
+}
+
+
+const ensureLoggedIn = (req, res, next) => {
+  req.user ? next() : res.status(401).json(
+    {message: 'restricted to authenticated users'});
+}
+
+router.post('/login', )
+router.get('/me', ensureLoggedIn, (req, res) => {
+  User
+    .findOne({username: req.user.username})
+    .exec()
+    .then(user => res.json(user))
+    .catch(err => res.status(500).json({message: 'internal server error'}));
+});
+
 
 module.exports = {router};
