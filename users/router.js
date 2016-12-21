@@ -45,7 +45,7 @@ router.post('/', (req, res) => {
   }
 
   // check for existing user
-  User
+  return User
     .find({username})
     .count()
     .exec()
@@ -54,11 +54,25 @@ router.post('/', (req, res) => {
         return res.status(422).json({message: 'username already taken'});
       }
       // if no existing user, create a new one
+      console.info(`Creating new user "${username}"`);
+
       User
         .create({username, password})
         .then(user => res.status(201).json({}));
     })
     .catch(err => res.status(500).json({message: 'Internal server error'}));
+});
+
+// never expose all your users like below in a prod application
+// we're just doing this so we have a quick way to see
+// if we're creating users. keep in mind, you can also
+// verify this in the Mongo shell.
+router.get('/', (req, res) => {
+  return User
+    .find()
+    .exec()
+    .then(users => res.json(users.map(user => user.apiRepr())))
+    .catch(err => console.log(err) && res.status(500).json({message: 'Internal server error'}));
 });
 
 module.exports = {router};

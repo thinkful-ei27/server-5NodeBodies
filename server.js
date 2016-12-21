@@ -9,16 +9,12 @@ mongoose.Promise = global.Promise;
 
 const {PORT, DATABASE_URL} = require('./config');
 
-// const {Restaurant} = require('./restaurants');
-
 const app = express();
-app.use(bodyParser.json());
 
 // logging
 app.use(morgan('common'));
 
 app.use('/users/', usersRouter);
-
 
 app.use('*', function(req, res) {
   return res.status(404).json({message: 'Not Found'});
@@ -65,5 +61,4 @@ if (require.main === module) {
 };
 
 module.exports = {app, runServer, closeServer};
-
 
