@@ -80,18 +80,19 @@ router.post('/', (req, res) => {
         return res.status(422).json({message: 'username already taken'});
       }
       // if no existing user, create a new one
+      console.log(`Creating new user for ${username}`);
       User
         .create({username, password})
-        .then(user => res.status(201).json({}));
+        .then(user => {
+          return passport.authenticate(
+            'basic', {session: true},
+            (req, res) => {console.log('got here'), res.status(201).json({})});
+        });
     })
     .catch(err => res.status(500).json({message: 'Internal server error'}));
 });
 
-const handleAuthentication = (req, res) => {
-  passport.authenticate('basic', {session: true}, (req, res) => {
-    return res.json({username: req.user.username});
-  });
-}
+
 
 
 const ensureLoggedIn = (req, res, next) => {
@@ -99,7 +100,6 @@ const ensureLoggedIn = (req, res, next) => {
     {message: 'restricted to authenticated users'});
 }
 
-router.post('/login', )
 router.get('/me', ensureLoggedIn, (req, res) => {
   User
     .findOne({username: req.user.username})
