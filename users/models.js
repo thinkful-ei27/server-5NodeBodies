@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 
+mongoose.Promise = global.Promise;
+
 const STATE_ABBREVIATIONS = Object.keys(require('./state-abbreviations'));
 
 const UserSchema = mongoose.Schema({
@@ -20,6 +22,7 @@ const UserSchema = mongoose.Schema({
     streetName: {type: String},
     zipCode: {type: Number},
     city: {type: String},
+    // we use a set list of state abbreviations
     state: {type: String, enum: STATE_ABBREVIATIONS}
   }
 });
@@ -30,6 +33,17 @@ UserSchema.methods.apiRepr = function() {
     firstName: this.firstName || '',
     lastName: this.lastName || '',
     address: this.address || {} }
+}
+
+UserSchema.methods.validatePassword = function(password) {
+  return new Promise(function(resolve, reject) {
+    return bcrypt.compare(password, this.password, function(err, isValid) {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(isValid);
+    });
+  });
 }
 
 UserSchema.statics.hashPassword = function(password) {
