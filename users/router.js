@@ -57,6 +57,8 @@ router.post('/', (req, res) => {
       console.info(`Creating new user "${username}"`);
 
       User
+        // never store a raw password in a public application
+        // we'll see later in this lesson how to hash user passwords
         .create({username, password})
         .then(user => res.status(201).json({}));
     })
