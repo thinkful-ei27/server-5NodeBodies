@@ -55,14 +55,18 @@ router.post('/', (req, res) => {
       }
       // if no existing user, create a new one
       console.info(`Creating new user "${username}"`);
-
-      User
-        // never store a raw password in a public application
-        // we'll see later in this lesson how to hash user passwords
-        .create({username, password})
-        .then(user => res.status(201).json({}));
+      return User.hashPassword(password)
     })
-    .catch(err => res.status(500).json({message: 'Internal server error'}));
+    .then(hash => {
+      return User
+        .create({username: username, password: hash})
+    })
+    .then(user => {
+      return res.status(201).json(user.apiRepr());
+    })
+    .catch(err => {
+      res.status(500).json({message: 'Internal server error'})
+    });
 });
 
 // never expose all your users like below in a prod application

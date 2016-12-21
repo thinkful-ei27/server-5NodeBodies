@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 
 const STATE_ABBREVIATIONS = Object.keys(require('./state-abbreviations'));
@@ -25,11 +26,16 @@ const UserSchema = mongoose.Schema({
 
 UserSchema.methods.apiRepr = function() {
   return {
-    username: this.username,
-    firstName: this.firstName,
-    lastName: this.lastName,
-    address: this.address
-  }
+    username: this.username || '',
+    firstName: this.firstName || '',
+    lastName: this.lastName || '',
+    address: this.address || {} }
+}
+
+UserSchema.statics.hashPassword = function(password) {
+  return bcrypt
+    .hash(password, 10)
+    .then(hash => hash);
 }
 
 const User = mongoose.model('User', UserSchema);
