@@ -36,7 +36,7 @@ UserSchema.methods.apiRepr = function() {
 }
 
 UserSchema.methods.validatePassword = function(password) {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     return bcrypt.compare(password, this.password, function(err, isValid) {
       if (err) {
         return reject(err);
