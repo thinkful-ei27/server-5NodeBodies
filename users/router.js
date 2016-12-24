@@ -18,7 +18,7 @@ router.post('/', (req, res) => {
     return res.status(422).json({message: 'Missing field: username'});
   }
 
-  let {username} = req.body;
+  let {username, password, firstName, lastName} = req.body;
 
   if (typeof username !== 'string') {
     return res.status(422).json({message: 'Incorrect field type: username'});
@@ -30,11 +30,9 @@ router.post('/', (req, res) => {
     return res.status(422).json({message: 'Incorrect field length: username'});
   }
 
-  if (!('password' in req.body)) {
+  if (!(password)) {
     return res.status(422).json({message: 'Missing field: password'});
   }
-
-  let {password} = req.body;
 
   if (typeof password !== 'string') {
     return res.status(422).json({message: 'Incorrect field type: password'});
@@ -61,7 +59,12 @@ router.post('/', (req, res) => {
     })
     .then(hash => {
       return User
-        .create({username: username, password: hash})
+        .create({
+          username: username,
+          password: hash,
+          firstName: firstName,
+          lastName: lastName
+        })
     })
     .then(user => {
       return res.status(201).json(user.apiRepr());

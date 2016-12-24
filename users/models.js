@@ -16,23 +16,15 @@ const UserSchema = mongoose.Schema({
     required: true
   },
   firstName: {type: String, default: ""},
-  lastName: {type: String, default: ""},
-  address: {
-    streetNumber: {type: String},
-    streetName: {type: String},
-    zipCode: {type: Number},
-    city: {type: String},
-    // we use a set list of state abbreviations
-    state: {type: String, enum: STATE_ABBREVIATIONS}
-  }
+  lastName: {type: String, default: ""}
 });
 
 UserSchema.methods.apiRepr = function() {
   return {
     username: this.username || '',
     firstName: this.firstName || '',
-    lastName: this.lastName || '',
-    address: this.address || {} }
+    lastName: this.lastName || ''
+  };
 }
 
 UserSchema.methods.validatePassword = function(password) {
