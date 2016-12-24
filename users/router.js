@@ -9,9 +9,6 @@ const router = express.Router();
 
 router.use(jsonParser);
 
-const passport = require('passport');
-const {BasicStrategy} = require('passport-http');
-
 
 const strategy = new BasicStrategy(
   (username, password, cb) => {
