@@ -1,5 +1,7 @@
+const {BasicStrategy} = require('passport-http');
 const express = require('express');
 const jsonParser = require('body-parser').json();
+const passport = require('passport');
 
 const {User} = require('./models');
 
@@ -42,7 +44,7 @@ router.post('/', (req, res) => {
     return res.status(422).json({message: 'Missing field: username'});
   }
 
-  let {username} = req.body;
+  let {username, password, firstName, lastName} = req.body;
 
   if (typeof username !== 'string') {
     return res.status(422).json({message: 'Incorrect field type: username'});
@@ -54,11 +56,9 @@ router.post('/', (req, res) => {
     return res.status(422).json({message: 'Incorrect field length: username'});
   }
 
-  if (!('password' in req.body)) {
+  if (!(password)) {
     return res.status(422).json({message: 'Missing field: password'});
   }
-
-  let {password} = req.body;
 
   if (typeof password !== 'string') {
     return res.status(422).json({message: 'Incorrect field type: password'});
@@ -71,7 +71,7 @@ router.post('/', (req, res) => {
   }
 
   // check for existing user
-  User
+  return User
     .find({username})
     .count()
     .exec()
@@ -80,33 +80,70 @@ router.post('/', (req, res) => {
         return res.status(422).json({message: 'username already taken'});
       }
       // if no existing user, create a new one
-      console.log(`Creating new user for ${username}`);
-      User
-        .create({username, password})
-        .then(user => {
-          return passport.authenticate(
-            'basic', {session: true},
-            (req, res) => {console.log('got here'), res.status(201).json({})});
-        });
+      console.info(`Creating new user "${username}"`);
+      return User.hashPassword(password)
     })
-    .catch(err => res.status(500).json({message: 'Internal server error'}));
+    .then(hash => {
+      return User
+        .create({
+          username: username,
+          password: hash,
+          firstName: firstName,
+          lastName: lastName
+        })
+    })
+    .then(user => {
+      return res.status(201).json(user.apiRepr());
+    })
+    .catch(err => {
+      res.status(500).json({message: 'Internal server error'})
+    });
 });
 
-
-
-
-const ensureLoggedIn = (req, res, next) => {
-  req.user ? next() : res.status(401).json(
-    {message: 'restricted to authenticated users'});
-}
-
-router.get('/me', ensureLoggedIn, (req, res) => {
-  User
-    .findOne({username: req.user.username})
+// never expose all your users like below in a prod application
+// we're just doing this so we have a quick way to see
+// if we're creating users. keep in mind, you can also
+// verify this in the Mongo shell.
+router.get('/', (req, res) => {
+  return User
+    .find()
     .exec()
-    .then(user => res.json(user))
-    .catch(err => res.status(500).json({message: 'internal server error'}));
+    .then(users => res.json(users.map(user => user.apiRepr())))
+    .catch(err => console.log(err) && res.status(500).json({message: 'Internal server error'}));
 });
+
+
+// NB: at time of writing, passport uses callbacks, not promises
+const basicStrategy = new BasicStrategy(function(username, password, callback) {
+  let user;
+  User
+    .findOne({username: username})
+    .exec()
+    .then(_user => {
+      user = _user;
+      if (!user) {
+        return callback(null, false, {message: 'Incorrect username'});
+      }
+      return user.validatePassword(password);
+    })
+    .then(isValid => {
+      if (!isValid) {
+        return callback(null, false, {message: 'Incorrect password'});
+      }
+      else {
+        return callback(null, user)
+      }
+    });
+});
+
+
+passport.use(basicStrategy);
+router.use(passport.initialize());
+
+router.get('/me',
+  passport.authenticate('basic', {session: false}),
+  (req, res) => res.json({user: req.user.apiRepr()})
+);
 
 
 module.exports = {router};
