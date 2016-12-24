@@ -79,8 +79,7 @@ router.post('/', (req, res) => {
       if (count > 0) {
         return res.status(422).json({message: 'username already taken'});
       }
-      // if no existing user, create a new one
-      console.info(`Creating new user "${username}"`);
+      // if no existing user, hash password
       return User.hashPassword(password)
     })
     .then(hash => {
