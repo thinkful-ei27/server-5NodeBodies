@@ -15,7 +15,7 @@ const UserSchema = mongoose.Schema({
     index: { unique: true }
   },
   password: {
-    type: String,
+    type: String, // besides setting type, it also protects against injection attacks http://stackoverflow.com/a/38415968
     required: true,
     trim: true,
     validate: [(pwd) => 6 < pwd.length, "Password must be at least 6 characters"]

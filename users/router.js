@@ -9,11 +9,9 @@ const router = express.Router();
 
 router.use(jsonParser);
 
-const strategy = new BasicStrategy(
-  (username, password, cb) => {
-    User
-      .findOne({username})
-      .exec()
+/* Plain-text password check
+const strategy = new BasicStrategy((username, password, cb) => {
+    User.findOne({username}).exec()
       .then(user => {
         if (!user) {
           return cb(null, false, {
@@ -29,6 +27,7 @@ const strategy = new BasicStrategy(
 });
 
 passport.use(strategy);
+*/
 
 router.post('/', (req, res) => {
   if (!req.body) {
@@ -39,19 +38,12 @@ router.post('/', (req, res) => {
   // And MyModel(doc).save() runs UserSchema.pre() which hashes the password
   // This ensures the password is properly hashed for POSTS, PUTS and unit tests
   return User
-    .create({
-      username,
-      password,
-      firstName,
-      lastName
-    })
+    .create({ username, password, firstName, lastName })
     .then(user => {
       return res.location('/users/' + user._id).status(201).json({});
     })
     .catch(err => {
-
       // console.dir(err, {colors: true})
-
       if (err.name === 'ValidationError') {
           return res.status(422).json(err)
       } else if (err.name === 'MongoError') {
@@ -67,13 +59,16 @@ router.post('/', (req, res) => {
 // if we're creating users. keep in mind, you can also
 // verify this in the Mongo shell.
 router.get('/', (req, res) => {
-  return User
-    .find()
-    .exec()
+  return User.find().exec()
     .then(users => res.json(users.map(user => user.apiRepr())))
     .catch(err => console.log(err) && res.status(500).json({message: 'Internal server error'}));
 });
 
+router.get('/foo', (req, res) => {
+  return User.findOne({username: username}).exec()
+    .then(users => res.json(users.map(user => user.apiRepr())))
+    .catch(err => console.log(err) && res.status(500).json({message: 'Internal server error'}));
+});
 
 // NB: at time of writing, passport uses callbacks, not promises
 const basicStrategy = new BasicStrategy(function(username, password, callback) {
@@ -100,12 +95,15 @@ const basicStrategy = new BasicStrategy(function(username, password, callback) {
 passport.use(basicStrategy);
 router.use(passport.initialize());
 
-// basic strategy returns the current user document so simply return the representation
+// basic strategy authentications returns the current `user` document
+// so simply return the representation
 router.get('/me',
   passport.authenticate('basic', {session: false}),
   (req, res) => res.json(req.user.apiRepr())
 );
 
+// basic strategy authentications returns the current `user` document
+// So we update the user and save
 router.put('/me', passport.authenticate('basic', {session: false }),
   (req, res) => {
     req.user = Object.assign(req.user, req.body);
