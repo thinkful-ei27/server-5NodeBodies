@@ -14,12 +14,10 @@ const strategy = new BasicStrategy((username, password, cb) => {
     User.findOne({username}).exec()
       .then(user => {
         if (!user) {
-          return cb(null, false, {
-            message: 'Incorrect username'
-          });
+          return cb(null, false);
         }
         if (user.password !== password) {
-          return cb(null, false, 'Incorrect password');
+          return cb(null, false);
         }
         return cb(null, user);
       })
@@ -72,23 +70,21 @@ router.get('/foo', (req, res) => {
 
 // NB: at time of writing, passport uses callbacks, not promises
 const basicStrategy = new BasicStrategy(function(username, password, callback) {
-  let user;
   User.findOne({username: username}).exec()
-    .then(_user => {
-      user = _user;
+    .then(user => {
       if (!user) {
-        return callback(null, false, {message: 'Incorrect username'});
+        return callback(null, false);
       }
-      return user.validatePassword(password);
-    })
-    .then(isValid => {
-      if (!isValid) {
-        return callback(null, false, {message: 'Incorrect password'});
-      }
-      else {
-        return callback(null, user)
-      }
-    });
+
+      user.validatePassword(password)
+        .then(isValid => {
+          if (!isValid) {
+            return callback(null, false);
+          }
+          return callback(null, user)
+      })
+
+    }).catch( (err) => callback(err));
 });
 
 
@@ -98,7 +94,7 @@ router.use(passport.initialize());
 // basic strategy authentications returns the current `user` document
 // so simply return the representation
 router.get('/me',
-  passport.authenticate('basic', {session: false}),
+  passport.authenticate('basic', {session: false }),
   (req, res) => res.json(req.user.apiRepr())
 );
 
