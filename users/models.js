@@ -9,11 +9,16 @@ const UserSchema = mongoose.Schema({
   username: {
     type: String,
     required: true,
-    unique: true
+    trim: true,
+    // match: /[a-zA-Z0-9]/, // name must be alpha characters
+    match: /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/, // validate email address
+    index: { unique: true }
   },
   password: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    validate: [(pwd) => 6 < pwd.length, "Password must be at least 6 characters"]
   },
   firstName: {type: String, default: ""},
   lastName: {type: String, default: ""}
@@ -33,11 +38,16 @@ UserSchema.methods.validatePassword = function(password) {
     .then(isValid => isValid);
 }
 
-UserSchema.statics.hashPassword = function(password) {
-  return bcrypt
-    .hash(password, 10)
-    .then(hash => hash);
-}
+UserSchema.pre('save', function(next) {
+    var user = this;
+    // only hash the password if it has been modified (or is new)
+    if (!user.isModified('password')) return next();
+    bcrypt.hash(user.password, 10, function(err, hash) {
+      if (err) return next(err);
+      user.password = hash;
+      next();
+    });
+});
 
 const User = mongoose.model('User', UserSchema);
 

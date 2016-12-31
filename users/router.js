@@ -9,7 +9,6 @@ const router = express.Router();
 
 router.use(jsonParser);
 
-
 const strategy = new BasicStrategy(
   (username, password, cb) => {
     User
@@ -31,68 +30,35 @@ const strategy = new BasicStrategy(
 
 passport.use(strategy);
 
-
 router.post('/', (req, res) => {
   if (!req.body) {
     return res.status(400).json({message: 'No request body'});
   }
-
-  if (!('username' in req.body)) {
-    return res.status(422).json({message: 'Missing field: username'});
-  }
-
   let {username, password, firstName, lastName} = req.body;
-
-  if (typeof username !== 'string') {
-    return res.status(422).json({message: 'Incorrect field type: username'});
-  }
-
-  username = username.trim();
-
-  if (username === '') {
-    return res.status(422).json({message: 'Incorrect field length: username'});
-  }
-
-  if (!(password)) {
-    return res.status(422).json({message: 'Missing field: password'});
-  }
-
-  if (typeof password !== 'string') {
-    return res.status(422).json({message: 'Incorrect field type: password'});
-  }
-
-  password = password.trim();
-
-  if (password === '') {
-    return res.status(422).json({message: 'Incorrect field length: password'});
-  }
-
-  // check for existing user
+  // MyModel.create(docs) does new MyModel(doc).save() for every doc in docs.
+  // And MyModel(doc).save() runs UserSchema.pre() which hashes the password
+  // This ensures the password is properly hashed for POSTS, PUTS and unit tests
   return User
-    .find({username})
-    .count()
-    .exec()
-    .then(count => {
-      if (count > 0) {
-        return res.status(422).json({message: 'username already taken'});
-      }
-      // if no existing user, hash password
-      return User.hashPassword(password)
-    })
-    .then(hash => {
-      return User
-        .create({
-          username: username,
-          password: hash,
-          firstName: firstName,
-          lastName: lastName
-        })
+    .create({
+      username,
+      password,
+      firstName,
+      lastName
     })
     .then(user => {
-      return res.status(201).json(user.apiRepr());
+      return res.location('/users/' + user._id).status(201).json({});
     })
     .catch(err => {
-      res.status(500).json({message: 'Internal server error'})
+
+      // console.dir(err, {colors: true})
+
+      if (err.name === 'ValidationError') {
+          return res.status(422).json(err)
+      } else if (err.name === 'MongoError') {
+          return res.status(409).json({name: err.name, message: err.message, code: err.code})
+      } else {
+        return res.status(500).json({message: 'Internal server error'})
+      }
     });
 });
 
@@ -112,9 +78,7 @@ router.get('/', (req, res) => {
 // NB: at time of writing, passport uses callbacks, not promises
 const basicStrategy = new BasicStrategy(function(username, password, callback) {
   let user;
-  User
-    .findOne({username: username})
-    .exec()
+  User.findOne({username: username}).exec()
     .then(_user => {
       user = _user;
       if (!user) {
@@ -136,10 +100,45 @@ const basicStrategy = new BasicStrategy(function(username, password, callback) {
 passport.use(basicStrategy);
 router.use(passport.initialize());
 
+// basic strategy returns the current user document so simply return the representation
 router.get('/me',
   passport.authenticate('basic', {session: false}),
-  (req, res) => res.json({user: req.user.apiRepr()})
+  (req, res) => res.json(req.user.apiRepr())
 );
 
+router.put('/me', passport.authenticate('basic', {session: false }),
+  (req, res) => {
+    req.user = Object.assign(req.user, req.body);
+
+    // document.save triggers mongoose middleware such as model.pre
+    req.user.save()
+    .then(user => {
+      return res.json(user.apiRepr());
+    })
+    .catch(err => {
+      if (err.name === 'ValidationError') {
+          return res.status(422).json(err)
+      } else if (err.name === 'MongoError') {
+          return res.status(422).json(err)
+      } else {
+        return res.status(500).json({message: 'Internal server error'})
+      }
+    });
+  }
+);
+
+router.delete('/me', passport.authenticate('basic', {session: false }),
+  (req, res) => {
+    req.user.remove()
+    .then(user => {
+      return res.json({});
+    })
+    .catch(err => {
+      res.status(500).json({message: 'Internal server error'})
+    });
+  }
+);
+
+router.get('/login', (req, res) => res.json({message: 'login page'}));
 
 module.exports = {router};

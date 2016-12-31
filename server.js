@@ -16,6 +16,8 @@ app.use(morgan('common'));
 
 app.use('/users/', usersRouter);
 
+app.use(express.static('public'));
+
 app.use('*', function(req, res) {
   return res.status(404).json({message: 'Not Found'});
 });
@@ -24,8 +26,9 @@ app.use('*', function(req, res) {
 // assumes runServer has run and set `server` to a server object
 let server;
 
-function runServer() {
+function runServer(callback) {
   return new Promise((resolve, reject) => {
+    console.log(DATABASE_URL);
     mongoose.connect(DATABASE_URL, err => {
       if (err) {
         return reject(err);
@@ -61,4 +64,3 @@ if (require.main === module) {
 };
 
 module.exports = {app, runServer, closeServer};
-
