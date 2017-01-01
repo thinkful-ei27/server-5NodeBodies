@@ -121,8 +121,9 @@ describe('Test /user endpoints with prepopulated users', () => {
             result.username.should.equal(newUser.username);
           });
       });
-      it('should reject users without a username', () => {
+      it.only('should reject users without a username', () => {
         let badUser = {
+          password: 'password',
           firstName: 'bad',
           lastName: 'user',
         };
@@ -173,7 +174,32 @@ describe('Test /user endpoints with prepopulated users', () => {
             spy.should.not.have.been.called();
           });
       });
-
+      it('should reject users without a password', () => {
+        let badUser = {
+          firstName: 'bad',
+          lastName: 'user',
+        };
+        let spy = chai.spy();
+        // Add a user without a username
+        return chai.request(app).post('/users').send(badUser)
+          .then(spy)
+          .catch(err => {
+            // If the request fails, make sure it contains the error
+            let res = err.response;
+            res.should.have.status(422);
+            res.type.should.equal('application/json');
+            res.charset.should.equal('utf-8');
+            res.body.should.be.an('object');
+            res.body.should.have.property('message');
+            res.body.name.should.equal('ValidationError');
+            res.body.message.should.equal('User validation failed');
+            res.body.errors.username.message.should.equal('Path `username` is required.');
+          })
+          .then(() => {
+            // Check that the request didn't succeed
+            spy.should.not.have.been.called();
+          });
+      });
       it('should reject duplicate entry for johnDoe', () => {
         let spy = chai.spy();
         return chai.request(app).post('/users').send(johnDoe)
