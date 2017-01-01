@@ -174,7 +174,7 @@ describe('Test /user endpoints with prepopulated users', () => {
             spy.should.not.have.been.called();
           });
       });
-      it.only('should reject users without a password', () => {
+      it('should reject users without a password', () => {
         let badUser = {
           username: 'bad.user@example.com',
           firstName: 'bad',
@@ -235,7 +235,6 @@ describe('Test /user endpoints with prepopulated users', () => {
               spy.should.not.have.been.called();
             });
         });
-
         it('should 401 on failed username authentication', function() {
           let spy = chai.spy();
           // this call attempts a BAD username and good passowrd
@@ -248,7 +247,6 @@ describe('Test /user endpoints with prepopulated users', () => {
               spy.should.not.have.been.called();
             });
         });
-
         it('should 401 on failed password authentication', function() {
           let spy = chai.spy();
           // this call attempts a good username and BAD passowrd
@@ -261,8 +259,6 @@ describe('Test /user endpoints with prepopulated users', () => {
               spy.should.not.have.been.called();
             });
         });
-
-
         it('successful authentication should return a single user', () => {
           return chai.request(app).get('/users/me').auth(johnDoe.username, johnDoe.password)
             .then(res => {
@@ -308,7 +304,6 @@ describe('Test /user endpoints with prepopulated users', () => {
               result.lastName.should.equal(updated.lastName);
             });
         });
-
         it('should allow changing a user username', function() {
             let updated = {
               username: 'new.email@example.com'
@@ -333,7 +328,6 @@ describe('Test /user endpoints with prepopulated users', () => {
               result.username.should.equal(updated.username);
             });
         });
-
         it('should not allow changing a user username to an empty string', function() {
           let spy = chai.spy();
 
@@ -349,7 +343,6 @@ describe('Test /user endpoints with prepopulated users', () => {
               spy.should.not.have.been.called();
             });
         });
-
         //Note there are hundreds of validation tests that can be run on email validation regex
         it('should not allow changing a user username to an invalid email', function() {
           let spy = chai.spy();
@@ -365,7 +358,6 @@ describe('Test /user endpoints with prepopulated users', () => {
               spy.should.not.have.been.called();
             });
         });
-
         it('should not allow changing a user username existing username', function() {
           //login as john doe and attempt to update username to jane doe
           let spy = chai.spy();
@@ -381,94 +373,29 @@ describe('Test /user endpoints with prepopulated users', () => {
               spy.should.not.have.been.called();
             });
         });
-
-        it('should reject non-string usernames', function() {
-          /*let user = {
-              _id: '000000000000000000000000',
-              username: 42
-          };
-          let spy = chai.spy();
-          // Add a user with a non-string username
-          return chai.request(app)
-              .put(this.singlePattern.stringify({
-                  userId: user._id
-              }))
-              .send(user)
-              .then(spy)
-              .catch(function(err) {
-                  // If the request fails, make sure it contains the
-                  // error
-                  let res = err.response;
-                  res.should.have.status(422);
-                  res.type.should.equal('application/json');
-                  res.charset.should.equal('utf-8');
-                  res.body.should.be.an('object');
-                  res.body.should.have.property('message');
-                  res.body.message.should.equal('Incorrect field type: username');
-              })
-              .then(function() {
-                  // Check that the request didn't succeed
-                  spy.called.should.be.false;
-              });*/
-        });
-
       });
 
       describe('DELETE', function() {
-        it('should 404 on non-existent users', function() {
-          /*let spy = chai.spy();
-          // Try to delete a non-existent user
-          return chai.request(app)
-              .delete(this.singlePattern.stringify({userId: '000000000000000000000000'}))
-              .then(spy)
-              .catch(function(err) {
-                  // If the request fails, make sure it contains the
-                  // error
-                  let res = err.response;
-                  res.should.have.status(404);
-                  res.type.should.equal('application/json');
-                  res.charset.should.equal('utf-8');
-                  res.body.should.be.an('object');
-                  res.body.should.have.property('message');
-                  res.body.message.should.equal('User not found');
-              })
-              .then(function() {
-                  // Check that the request didn't succeed
-                  spy.called.should.be.false;
-              });*/
+        it('successful authentication should return a single user', () => {
+          return chai.request(app).delete('/users/me').auth(johnDoe.username, johnDoe.password)
+            .then(res => {
+              res.should.have.status(200);
+              res.type.should.equal('application/json');
+              res.charset.should.equal('utf-8');
+              res.body.should.be.an('object');
+              res.body.should.be.empty;
+
+              // Fetch the user from the database
+              return User.findOne({
+                username: johnDoe.username
+              }).exec();
+          })
+          .then(result => {
+            should.not.exist(result);
+          });
+
         });
 
-        it('should delete a user', function() {
-          /*let user = {
-              username: 'joe'
-          };
-          let userId;
-          // Create a user in the database
-          return User.create(user)
-              .then(function(res) {
-                  userId = res._id.toString();
-                  // Request to delete the user
-                  return chai.request(app)
-                      .delete(this.singlePattern.stringify({
-                          userId: userId
-                      }));
-              }.bind(this))
-              .then(function(res) {
-                  // Make sure that an empty object was returned
-                  res.should.have.status(200);
-                  res.type.should.equal('application/json');
-                  res.charset.should.equal('utf-8');
-                  res.body.should.be.an('object');
-                  res.body.should.be.empty;
-
-                  // Try to fetch the user from the database
-                  return User.findById(userId);
-              })
-              .then(function(res) {
-                  // Make sure that no user could be fetched
-                  should.not.exist(res);
-              });*/
-        });
       });
     });
   });
