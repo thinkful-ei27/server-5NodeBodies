@@ -1,4 +1,5 @@
 global.DATABASE_URL = 'mongodb://localhost/basic-auth-test'
+global.PORT = '8081'
 
 var runServer = require('../server').runServer;
 

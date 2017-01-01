@@ -121,7 +121,7 @@ describe('Test /user endpoints with prepopulated users', () => {
             result.username.should.equal(newUser.username);
           });
       });
-      it.only('should reject users without a username', () => {
+      it('should reject users without a username', () => {
         let badUser = {
           password: 'password',
           firstName: 'bad',
@@ -174,17 +174,16 @@ describe('Test /user endpoints with prepopulated users', () => {
             spy.should.not.have.been.called();
           });
       });
-      it('should reject users without a password', () => {
+      it.only('should reject users without a password', () => {
         let badUser = {
+          username: 'bad.user@example.com',
           firstName: 'bad',
           lastName: 'user',
         };
         let spy = chai.spy();
-        // Add a user without a username
         return chai.request(app).post('/users').send(badUser)
           .then(spy)
           .catch(err => {
-            // If the request fails, make sure it contains the error
             let res = err.response;
             res.should.have.status(422);
             res.type.should.equal('application/json');
@@ -193,10 +192,9 @@ describe('Test /user endpoints with prepopulated users', () => {
             res.body.should.have.property('message');
             res.body.name.should.equal('ValidationError');
             res.body.message.should.equal('User validation failed');
-            res.body.errors.username.message.should.equal('Path `username` is required.');
+            res.body.errors.password.message.should.equal('Path `password` is required.');
           })
           .then(() => {
-            // Check that the request didn't succeed
             spy.should.not.have.been.called();
           });
       });
