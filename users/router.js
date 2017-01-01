@@ -62,12 +62,6 @@ router.get('/', (req, res) => {
     .catch(err => console.log(err) && res.status(500).json({message: 'Internal server error'}));
 });
 
-router.get('/foo', (req, res) => {
-  return User.findOne({username: username}).exec()
-    .then(users => res.json(users.map(user => user.apiRepr())))
-    .catch(err => console.log(err) && res.status(500).json({message: 'Internal server error'}));
-});
-
 // NB: at time of writing, passport uses callbacks, not promises
 const basicStrategy = new BasicStrategy(function(username, password, callback) {
   User.findOne({username: username}).exec()
@@ -132,7 +126,5 @@ router.delete('/me', passport.authenticate('basic', {session: false }),
     });
   }
 );
-
-router.get('/login', (req, res) => res.json({message: 'login page'}));
 
 module.exports = {router};
