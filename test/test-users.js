@@ -19,32 +19,6 @@ const pattern = {
 chai.use(chaiHttp);
 chai.use(spies);
 
-describe('Test /user endpoints with empty database', () => {
-  beforeEach((done) => {
-    // Approach #1 Drop database and `ensureIndexes()`
-    mongoose.connection.db.dropDatabase()
-      .then(() => User.ensureIndexes())
-      .then(() => done());
-
-    // Approach #2 Remove items, retains indexes
-    // User.remove({}).then( () => done())
-
-  });
-  describe('GET /users', () => {
-    it('should return an empty list of users initially', () => {
-      return chai.request(app)
-        .get('/users')
-        .then(res => {
-          // Check that it's an empty array
-          res.should.have.status(200);
-          res.type.should.equal('application/json');
-          res.charset.should.equal('utf-8');
-          res.body.should.be.an('array');
-          res.body.length.should.equal(0);
-        });
-    });
-  });
-});
 
 describe('Test /user endpoints with prepopulated users', () => {
   // config dummy users to be used throughout across the tests
