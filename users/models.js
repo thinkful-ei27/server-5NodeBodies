@@ -33,9 +33,7 @@ UserSchema.methods.apiRepr = function() {
 }
 
 UserSchema.methods.validatePassword = function(password) {
-  return bcrypt
-    .compare(password, this.password)
-    .then(isValid => isValid);
+  return bcrypt.compare(password, this.password);
 }
 
 UserSchema.pre('save', function(next) {
@@ -48,6 +46,11 @@ UserSchema.pre('save', function(next) {
       next();
     });
 });
+
+// removed since hashing is now done in `UserSchema.pre('save', ...)`
+/* UserSchema.statics.hashPassword = function(password) {
+  return bcrypt.hash(password, 10);
+};*/
 
 const User = mongoose.model('User', UserSchema);
 
