@@ -2,6 +2,7 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const spies = require('chai-spies');
 const mongoose = require('mongoose');
+
 const app = require('../server').app;
 
 const {
@@ -9,7 +10,7 @@ const {
 } = require('../users/models');
 const should = chai.should();
 
-var UrlPattern = require('url-pattern');
+const UrlPattern = require('url-pattern');
 const pattern = {
   "/users": new UrlPattern('/users'),
   "/users/:userId": new UrlPattern('/users/:userId')

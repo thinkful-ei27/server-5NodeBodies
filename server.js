@@ -1,13 +1,12 @@
-const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
 const morgan = require('morgan');
 
-const {router: usersRouter} = require('./users');
+const { router: usersRouter } = require('./users');
 
 mongoose.Promise = global.Promise;
 
-const {PORT, DATABASE_URL} = require('./config');
+const { PORT, DATABASE_URL } = require('./config');
 
 const app = express();
 
@@ -18,18 +17,16 @@ app.use('/users/', usersRouter);
 
 app.use(express.static('public'));
 
-app.use('*', function(req, res) {
-  return res.status(404).json({message: 'Not Found'});
-});
+app.use('*', (req, res) => res.status(404).json({ message: 'Not Found' }));
 
 // referenced by both runServer and closeServer. closeServer
 // assumes runServer has run and set `server` to a server object
 let server;
 
-function runServer(callback) {
+function runServer() {
   return new Promise((resolve, reject) => {
     console.log(DATABASE_URL);
-    mongoose.connect(DATABASE_URL, err => {
+    mongoose.connect(DATABASE_URL, (err) => {
       if (err) {
         return reject(err);
       }
@@ -37,7 +34,7 @@ function runServer(callback) {
         console.log(`Your app is listening on port ${PORT}`);
         resolve();
       })
-      .on('error', err => {
+      .on('error', (err) => {
         mongoose.disconnect();
         reject(err);
       });
@@ -46,21 +43,19 @@ function runServer(callback) {
 }
 
 function closeServer() {
-  return mongoose.disconnect().then(() => {
-     return new Promise((resolve, reject) => {
-       console.log('Closing server');
-       server.close(err => {
-           if (err) {
-               return reject(err);
-           }
-           resolve();
-       });
-     });
-  });
+  return mongoose.disconnect().then(() => new Promise((resolve, reject) => {
+    console.log('Closing server');
+    server.close((err) => {
+      if (err) {
+           return reject(err);
+         }
+      resolve();
+    });
+  }));
 }
 
 if (require.main === module) {
   runServer().catch(err => console.error(err));
-};
+}
 
-module.exports = {app, runServer, closeServer};
+module.exports = { app, runServer, closeServer };
