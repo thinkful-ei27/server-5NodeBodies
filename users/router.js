@@ -1,9 +1,9 @@
-const {BasicStrategy} = require('passport-http');
+const { BasicStrategy } = require('passport-http');
 const express = require('express');
 const jsonParser = require('body-parser').json();
 const passport = require('passport');
 
-const {User} = require('./models');
+const { User } = require('./models');
 
 const router = express.Router();
 
@@ -29,26 +29,26 @@ passport.use(strategy);
 
 router.post('/', (req, res) => {
   if (!req.body) {
-    return res.status(400).json({message: 'No request body'});
+    return res.status(400).json({ message: 'No request body' });
   }
-  let {username, password, firstName, lastName} = req.body;
+  const { username, password, firstName, lastName } = req.body;
   // MyModel.create(docs) does new MyModel(doc).save() for every doc in docs.
   // And MyModel(doc).save() runs UserSchema.pre() which hashes the password
   // This ensures the password is properly hashed for POSTS, PUTS and unit tests
+
   return User
     .create({ username, password, firstName, lastName })
-    .then(user => {
-      return res.location('/users/' + user._id).status(201).json({});
-    })
-    .catch(err => {
-      // console.dir(err, {colors: true})
+    // Best Practice for POST calls that result in a creation, is use a HTTP 201 status code
+    // and include a Location header that points to the URL of the new resource.
+    // You *may* also return a representation of the resource as part of the response.
+    .then(user => res.location(`/users/${user._id}`).status(201).json(user.apiRepr()))
+    .catch((err) => {
       if (err.name === 'ValidationError') {
-          return res.status(422).json(err)
+        return res.status(422).json(err);
       } else if (err.name === 'MongoError') {
-          return res.status(409).json({name: err.name, message: err.message, code: err.code})
-      } else {
-        return res.status(500).json({message: 'Internal server error'})
+        return res.status(409).json({ message: 'Validation Error' });
       }
+      return res.status(500).json({ message: 'Internal server error' });
     });
 });
 
@@ -56,29 +56,26 @@ router.post('/', (req, res) => {
 // we're just doing this so we have a quick way to see
 // if we're creating users. keep in mind, you can also
 // verify this in the Mongo shell.
-router.get('/', (req, res) => {
-  return User.find().exec()
-    .then(users => res.json(users.map(user => user.apiRepr())))
-    .catch(err => console.log(err) && res.status(500).json({message: 'Internal server error'}));
-});
+router.get('/', (req, res) => User.find().exec()
+  .then(users => res.json(users.map(user => user.apiRepr())))
+  .catch(err => console.log(err) && res.status(500).json({ message: 'Internal server error' })));
 
 // NB: at time of writing, passport uses callbacks, not promises
-const basicStrategy = new BasicStrategy(function(username, password, callback) {
-  User.findOne({username: username}).exec()
-    .then(user => {
+const basicStrategy = new BasicStrategy((username, password, callback) => {
+  User.findOne({ username }).exec()
+    .then((user) => {
       if (!user) {
         return callback(null, false);
       }
 
-      user.validatePassword(password)
-        .then(isValid => {
+      return user.validatePassword(password)
+        .then((isValid) => {
           if (!isValid) {
             return callback(null, false);
           }
-          return callback(null, user)
-      })
-
-    }).catch( (err) => callback(err));
+          return callback(null, user);
+        });
+    }).catch(err => callback(err));
 });
 
 
@@ -88,43 +85,33 @@ router.use(passport.initialize());
 // basic strategy authentications returns the current `user` document
 // so simply return the representation
 router.get('/me',
-  passport.authenticate('basic', {session: false }),
-  (req, res) => res.json(req.user.apiRepr())
-);
+  passport.authenticate('basic', { session: false }),
+  (req, res) => res.json(req.user.apiRepr()));
 
 // basic strategy authentications returns the current `user` document
 // So we update the user and save
-router.put('/me', passport.authenticate('basic', {session: false }),
+router.put('/me', passport.authenticate('basic', { session: false }),
   (req, res) => {
     req.user = Object.assign(req.user, req.body);
 
     // document.save triggers mongoose middleware such as model.pre
     req.user.save()
-    .then(user => {
-      return res.json(user.apiRepr());
-    })
-    .catch(err => {
-      if (err.name === 'ValidationError') {
-          return res.status(422).json(err)
-      } else if (err.name === 'MongoError') {
-          return res.status(422).json(err)
-      } else {
-        return res.status(500).json({message: 'Internal server error'})
-      }
-    });
-  }
-);
+      .then(user => res.json(user.apiRepr()))
+      .catch((err) => {
+        if (err.name === 'ValidationError') {
+          return res.status(422).json(err);
+        } else if (err.name === 'MongoError') {
+          return res.status(409).json({ message: 'Conflict' });
+        }
+        return res.status(500).json({ message: 'Internal server error' });
+      });
+  });
 
-router.delete('/me', passport.authenticate('basic', {session: false }),
+router.delete('/me', passport.authenticate('basic', { session: false }),
   (req, res) => {
     req.user.remove()
-    .then(user => {
-      return res.json({});
-    })
-    .catch(err => {
-      res.status(500).json({message: 'Internal server error'})
-    });
-  }
-);
+      .then(() => res.json({}))
+      .catch(() => res.status(500).json({ message: 'Internal server error' }));
+  });
 
-module.exports = {router};
+module.exports = { router };
