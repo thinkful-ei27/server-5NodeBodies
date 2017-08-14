@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require('express');
 const mongoose = require('mongoose');
 const morgan = require('morgan');
@@ -34,8 +36,7 @@ function runServer(databaseUrl = DATABASE_URL, port = PORT) {
       server = app.listen(port, () => {
         console.log(`Your app is listening on port ${port}`);
         resolve();
-      })
-      .on('error', (err) => {
+      }).on('error', (err) => {
         mongoose.disconnect();
         reject(err);
       });
