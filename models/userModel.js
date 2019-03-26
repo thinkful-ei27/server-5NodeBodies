@@ -40,6 +40,14 @@ UserSchema.methods.serialize = function () {
   };
 };
 
+UserSchema.set('toJSON', {
+  virtuals: true,     // include built-in virtual `id`
+  transform: (doc, ret) => {
+    delete ret._id; // delete `_id`
+    delete ret.__v;
+  }
+})
+
 UserSchema.methods.validatePassword = function (password) {
   return bcrypt.compare(password, this.password);
 };

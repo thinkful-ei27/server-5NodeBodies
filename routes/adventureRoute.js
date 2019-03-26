@@ -32,26 +32,35 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     leftAnswer,
     parent: null
   }
+
   console.log(headNode);
-
+  let adventureId;
   return Node.create(headNode)
-  .then((id)=>{
-    console.log(id);
+  .then((_res)=>{
+    const nodeId = _res.id
+    const adventureObj = {
+      title,
+      startContent,
+      head: nodeId,
+      nodes : [nodeId],
+    }
+    return Adventure.create(adventureObj)
   })
+  .then((_res) => {
+    adventureId = _res.id
+    return User.findOne({ id: userId })
+  })
+  .then((_res) => {
+    const adventureArr = _res.adventures
+    return User.findOneAndUpdate({ id: userId }, {adventures : [...adventureArr, adventureId]})
+  })
+  .then((_res) => {
+    return res.json(adventureId)
+   })
+})
 
-  // {
-  //   title: 'string'
-  //   startTextContent: 'descripiton (could reading could be video url)
-  //   startUrlcontent:
-  //   firstNodequestion:
-  //   leftAnswer,
-  //     rightAnswer,
-  // }
+router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
 
-
-
-
-  // return User.findOne({ _id: userId })
 })
 
 /* 

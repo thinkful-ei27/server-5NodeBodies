@@ -13,6 +13,16 @@ const adventureSchema = mongoose.Schema({
     {type: mongoose.Schema.Types.ObjectId, ref: 'Node'}
   ],
 });
+
+
+adventureSchema.set('toJSON', {
+  virtuals: true,     // include built-in virtual `id`
+  transform: (doc, ret) => {
+    delete ret._id; // delete `_id`
+    delete ret.__v;
+  }
+})
+
 const Adventure = mongoose.model('Adventure', adventureSchema);
 
 module.exports = { Adventure };
