@@ -30,7 +30,8 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     question,
     rightAnswer,
     leftAnswer,
-    parent: null
+    parent: null,
+    ending : true
   }
 
   console.log(headNode);
@@ -60,6 +61,14 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 })
 
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
+  const userId = req.user.id;
+  const {
+    parent, // id
+    question,
+    rightAnswer,
+    leftAnswer } = req.body;
+//create the node
+//use that id to update the parent (left or right)
 
 })
 
