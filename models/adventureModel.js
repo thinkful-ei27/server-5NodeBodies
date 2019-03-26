@@ -5,13 +5,12 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 const adventureSchema = mongoose.Schema({
+  
   title: {type: String},
   startContent: {type: String},
   nodes : [
-    {_id: id,
-    }
+    {type: Schema.Types.ObjectId, ref: 'Node'}
   ],
-  endings: []
 });
 const Adventure = mongoose.model('Adventure', adventureSchema);
 

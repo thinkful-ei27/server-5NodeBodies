@@ -15,7 +15,7 @@ const UserSchema = mongoose.Schema({
     required: true
   },
   name: { type: String, default: '' },
-  adventures: []
+  adventures: [{type: Schema.Types.ObjectId, ref: 'Adventure'}]
 });
 /*
 wordList: [
