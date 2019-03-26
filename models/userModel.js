@@ -15,8 +15,21 @@ const UserSchema = mongoose.Schema({
     required: true
   },
   name: { type: String, default: '' },
-  adventures: []
+  adventures: [{type: Schema.Types.ObjectId, ref: 'Adventure'}]
 });
+/*
+wordList: [
+    {
+      _id: mongoose.Schema.Types.ObjectId,
+      word: String,
+      answer: String,
+      memoryStrength: { type: Number, default: 1 },
+      next: Number,
+      correctCount: { type: Number, default: 0 },
+      incorrectCount: { type: Number, default: 0 }
+    }
+  ]
+*/
 
 UserSchema.methods.serialize = function () {
   return {
