@@ -30,37 +30,61 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     question,
     rightAnswer,
     leftAnswer,
-    parent: null
+    parent: null,
+    ending: true
   }
 
-  console.log(headNode);
+
   let adventureId;
   return Node.create(headNode)
-  .then((_res)=>{
-    const nodeId = _res.id
-    const adventureObj = {
-      title,
-      startContent,
-      head: nodeId,
-      nodes : [nodeId],
-    }
-    return Adventure.create(adventureObj)
-  })
-  .then((_res) => {
-    adventureId = _res.id
-    return User.findOne({ id: userId })
-  })
-  .then((_res) => {
-    const adventureArr = _res.adventures
-    return User.findOneAndUpdate({ id: userId }, {adventures : [...adventureArr, adventureId]})
-  })
-  .then((_res) => {
-    return res.json(adventureId)
-   })
+    .then((_res) => {
+      const nodeId = _res.id
+      const adventureObj = {
+        title,
+        startContent,
+        head: nodeId,
+        nodes: [nodeId],
+      }
+      return Adventure.create(adventureObj)
+    })
+    .then((_res) => {
+      adventureId = _res.id
+      return User.findOne({ id: userId })
+    })
+    .then((_res) => {
+      const adventureArr = _res.adventures
+      return User.findOneAndUpdate({ id: userId }, { adventures: [...adventureArr, adventureId] })
+    })
+    .then((_res) => {
+      return res.json(adventureId)
+    })
 })
 
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
+  const userId = req.user.id;
+  const {
+    adventureId,
+    parent, // id
+    question,
+    rightAnswer,
+    leftAnswer } = req.body;
+  //create the node
+  const newNode = {
+    parent,
+    question,
+    rightAnswer,
+    leftAnswer
+  }
+  return Node.create(newNode)
+  .then((_res)=>{
+    res.json(_res);
+    // Figure out a way to make sure L,R pointers point to expected children. 
+    //  how do we go back to parent node and know 
+    // for sure which pointer to insert this newly created node id?
+  })
 
+  //use that id to update the parent (left or right)
+//  put that id in in node array on adventuyre
 })
 
 /* 
@@ -77,22 +101,7 @@ validate user.id
 make sure that it has valid inputs
 (if no first question/ answers, require them)
 
-create HEAD node,
-create adventure ,
-tag adventure to user schema.
-
-
 /api/adventure/buildAventure
-
-nodeobject={
- question
- left answer
- right answer
- lpointer 2 
- rpointer 7
- parent
-
-}
 
 */
 
