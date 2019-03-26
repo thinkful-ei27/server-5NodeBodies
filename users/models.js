@@ -1,5 +1,8 @@
 'use strict';
+<<<<<<< HEAD
 
+=======
+>>>>>>> user-models/login
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 
@@ -9,6 +12,7 @@ const UserSchema = mongoose.Schema({
   username: {
     type: String,
     required: true,
+<<<<<<< HEAD
     trim: true,
     // match: /[a-zA-Z0-9]/, // name must be alpha characters
     match: /^([\w-.]+@([\w-]+\.)+[\w-]{2,4})?$/, // validate email address
@@ -29,6 +33,24 @@ UserSchema.methods.apiRepr = function () {
     username: this.username || '',
     firstName: this.firstName || '',
     lastName: this.lastName || '',
+=======
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  name: { type: String, default: '' },
+  adventures: []
+});
+
+UserSchema.methods.serialize = function () {
+  return {
+    userId: this._id || '',
+    username: this.username || '',
+    name: this.name || '',
+    adventures: this.adventures || []
+>>>>>>> user-models/login
   };
 };
 
@@ -36,6 +58,7 @@ UserSchema.methods.validatePassword = function (password) {
   return bcrypt.compare(password, this.password);
 };
 
+<<<<<<< HEAD
 UserSchema.pre('save', function callback(next) {
   const user = this;
   // only hash the password if it has been modified (or is new)
@@ -51,6 +74,11 @@ UserSchema.pre('save', function callback(next) {
 /* UserSchema.statics.hashPassword = function(password) {
   return bcrypt.hash(password, 10);
 };*/
+=======
+UserSchema.statics.hashPassword = function (password) {
+  return bcrypt.hash(password, 10);
+};
+>>>>>>> user-models/login
 
 const User = mongoose.model('User', UserSchema);
 
