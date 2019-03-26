@@ -5,11 +5,11 @@ mongoose.Promise = global.Promise;
 
 const nodeSchema = mongoose.Schema({
   question : {type: String},
-  parent : [{type: Schema.Types.ObjectId, ref: 'Node'}],
+  parent : [{type: mongoose.Schema.Types.ObjectId, ref: 'Node'}],
   leftAnswer : {type: String},
-  leftPointer : {type: Schema.Types.ObjectId, ref: 'Node'},
+  leftPointer : {type: mongoose.Schema.Types.ObjectId, ref: 'Node'},
   rightAnswer : {type: String},
-  rightPointer : {type: Schema.Types.ObjectId, ref: 'Node'},
+  rightPointer : {type: mongoose.Schema.Types.ObjectId, ref: 'Node'},
   ending : {type: Boolean},
 });
 

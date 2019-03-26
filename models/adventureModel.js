@@ -8,9 +8,9 @@ const adventureSchema = mongoose.Schema({
 
   title: {type: String},
   startContent: {type: String},
-  head: {type: Schema.Types.ObjectId, ref: 'Node'},
+  head: {type: mongoose.Schema.Types.ObjectId, ref: 'Node'},
   nodes : [
-    {type: Schema.Types.ObjectId, ref: 'Node'}
+    {type: mongoose.Schema.Types.ObjectId, ref: 'Node'}
   ],
 });
 const Adventure = mongoose.model('Adventure', adventureSchema);

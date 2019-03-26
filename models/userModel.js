@@ -15,12 +15,12 @@ const UserSchema = mongoose.Schema({
     required: true
   },
   name: { type: String, default: '' },
-  adventures: [{type: Schema.Types.ObjectId, ref: 'Adventure'}]
+  adventures: [{type: mongoose.Schema.Types.ObjectId, ref: 'Adventure'}]
 });
 /*
 wordList: [
     {
-      _id: mongoose.Schema.Types.ObjectId,
+      _id: mongoose.mongoose.Schema.types.ObjectId,
       word: String,
       answer: String,
       memoryStrength: { type: Number, default: 1 },
