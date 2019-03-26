@@ -5,9 +5,10 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 const adventureSchema = mongoose.Schema({
-  
+
   title: {type: String},
   startContent: {type: String},
+  head: {type: Schema.Types.ObjectId, ref: 'Node'},
   nodes : [
     {type: Schema.Types.ObjectId, ref: 'Node'}
   ],

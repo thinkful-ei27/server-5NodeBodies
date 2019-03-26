@@ -11,7 +11,6 @@ const nodeSchema = mongoose.Schema({
   rightAnswer : {type: String},
   rightPointer : {type: Schema.Types.ObjectId, ref: 'Node'},
   ending : {type: Boolean},
-  head : {type: Boolean}
 });
 
 
