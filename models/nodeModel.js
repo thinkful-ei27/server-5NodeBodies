@@ -29,7 +29,7 @@ nodeSchema.set('toJSON', {
 
 
 
-const Node = mongoose.model('Node', nodeSchema);
+module.exports = mongoose.model('Node', nodeSchema);
 
 
-module.exports = { Node };
+// module.exports = { Node };
