@@ -5,14 +5,24 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 const adventureSchema = mongoose.Schema({
+
   title: {type: String},
   startContent: {type: String},
+  head: {type: mongoose.Schema.Types.ObjectId, ref: 'Node'},
   nodes : [
-    {_id: id,
-    }
+    {type: mongoose.Schema.Types.ObjectId, ref: 'Node'}
   ],
-  endings: []
 });
+
+
+adventureSchema.set('toJSON', {
+  virtuals: true,     // include built-in virtual `id`
+  transform: (doc, ret) => {
+    delete ret._id; // delete `_id`
+    delete ret.__v;
+  }
+})
+
 const Adventure = mongoose.model('Adventure', adventureSchema);
 
 module.exports = { Adventure };

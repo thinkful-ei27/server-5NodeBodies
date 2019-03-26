@@ -14,6 +14,9 @@ const passport = require('passport');
 // console.log(bobby); // De Niro - the variable name is bobby, not robert
 const { router: usersRouter } = require('./routes/userRoute');
 const { router: authRouter, localStrategy, jwtStrategy } = require('./auth');
+const { router: adventureRouter } = require('./routes/adventureRoute');
+
+
 
 mongoose.Promise = global.Promise;
 
@@ -35,11 +38,14 @@ app.use(function (req, res, next) {
   next();
 });
 
+// app.use(express.json());
+
 passport.use(localStrategy);
 passport.use(jwtStrategy);
 
 app.use('/api/users/', usersRouter);
 app.use('/api/auth/', authRouter);
+app.use('/api/adventure', adventureRouter);
 
 const jwtAuth = passport.authenticate('jwt', { session: false });
 

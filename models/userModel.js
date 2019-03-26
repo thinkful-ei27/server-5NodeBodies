@@ -15,12 +15,12 @@ const UserSchema = mongoose.Schema({
     required: true
   },
   name: { type: String, default: '' },
-  adventures: []
+  adventures: [{type: mongoose.Schema.Types.ObjectId, ref: 'Adventure'}]
 });
 /*
 wordList: [
     {
-      _id: mongoose.Schema.Types.ObjectId,
+      _id: mongoose.mongoose.Schema.types.ObjectId,
       word: String,
       answer: String,
       memoryStrength: { type: Number, default: 1 },
@@ -39,6 +39,14 @@ UserSchema.methods.serialize = function () {
     adventures: this.adventures || []
   };
 };
+
+UserSchema.set('toJSON', {
+  virtuals: true,     // include built-in virtual `id`
+  transform: (doc, ret) => {
+    delete ret._id; // delete `_id`
+    delete ret.__v;
+  }
+})
 
 UserSchema.methods.validatePassword = function (password) {
   return bcrypt.compare(password, this.password);
