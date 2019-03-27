@@ -36,7 +36,8 @@ UserSchema.methods.serialize = function () {
   return {
     userId: this._id || '',
     username: this.username || '',
-    name: this.name || '',
+    firstName: this.firstName || '',
+    lastName: this.lastName || '',
     adventures: this.adventures || []
   };
 };
