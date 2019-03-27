@@ -8,6 +8,8 @@ const router = express.Router();
 
 const jsonParser = bodyParser.json();
 
+//full route: '{BASE_URL}/api/users/'
+
 // Post to register a new user
 router.post('/', jsonParser, (req, res) => {
   const requiredFields = ['username', 'password'];
@@ -66,12 +68,6 @@ router.post('/', jsonParser, (req, res) => {
       // bcrypt truncates after 72 characters, so let's not give the illusion
       // of security by storing extra (unused) info
       max: 72
-    },
-    firstName: {
-      max: 25
-    },
-    lastName: {
-      max: 25
     }
   };
   const tooSmallField = Object.keys(sizedFields).find(
