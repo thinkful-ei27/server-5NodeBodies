@@ -8,6 +8,7 @@ const adventureSchema = mongoose.Schema({
 
   title: {type: String},
   startContent: {type: String},
+  videoURL: {type: String},
   head: {type: mongoose.Schema.Types.ObjectId, ref: 'Node'},
   nodes : [
     {type: mongoose.Schema.Types.ObjectId, ref: 'Node'}
