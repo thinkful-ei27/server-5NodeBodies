@@ -14,6 +14,11 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 //fullroute: '{BASE_URL}/api/adventure'
 
+router.get('/adventures', jwtAuth, (req, res, next) => {
+  const userId = req.user.userId;
+  return Adventure
+})
+
 // router.get('/adventures', jwtAuth, (req, res, next) => {
 //   const userId = req.user.id;
 //   return Adventure.find({userId: userId})
@@ -23,8 +28,7 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 // id to the user object.
 router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   const userId = req.user.userId;
-  console.log(req.user);
-  console.log(userId);
+  const username = req.user.username;
   const { title,
     startContent,
     question,
@@ -59,6 +63,8 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
           videoURL,
           head: nodeId,
           nodes: [nodeId],
+          creator: username,
+          creatorId: userId
         }
         return Adventure.create(adventureObj)
       } else next();
