@@ -12,14 +12,25 @@ const mongoose = require('mongoose');
 
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
+
+//fullroute: '{BASE_URL}/api/adventure'
+
+// router.get('/adventures', jwtAuth, (req, res, next) => {
+//   const userId = req.user.id;
+//   return Adventure.find({userId: userId})
+// })
+
 //  adventure/newAdventure route creates a new adventure document, head node, and adds the adventure
 // id to the user object.
 router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
-  const userId = req.user.id;
+  const userId = req.user.userId;
+  console.log(req.user);
+  console.log(userId);
   const { title,
     startContent,
     question,
     rightAnswer,
+    videoURL,
     leftAnswer } = req.body;
 
   if (!title) {
@@ -45,6 +56,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
         const adventureObj = {
           title,
           startContent,
+          videoURL,
           head: nodeId,
           nodes: [nodeId],
         }
@@ -54,14 +66,14 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     .then((_res) => {
       if (_res) {
         adventureId = _res.id
-        return User.findOne({ id: userId })
+        return User.findOne({ _id: userId })
       } else next();
     })
     .then((_res) => {
       const adventureArr = _res.adventures
       return User.findOneAndUpdate(
-        { id: userId },
-        { adventures: [...adventureArr, adventureId] }
+        { _id: userId },
+        { adventures: [...adventureArr, adventureId]}
       )
     })
     .then((_res) => {
