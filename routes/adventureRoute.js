@@ -37,8 +37,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   }
   // create adventureId variable in accessible scope
   let adventureId;
-
-  return Node.create(headNode)
+  return createNewNode(headNode)
     .then((_res) => {
       if (_res) {
         const nodeId = _res.id
@@ -79,32 +78,82 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 
 //  adventure/newNode adds new nodes, attaches them to adventure with correct pointers
 
+function updatePointerOnParent(parentId, parentAnswerLabel, nodeId) {
+  if (parentAnswerLabel === 1) {
+    return Node.findOneAndUpdate({ _id: parentId },
+      { leftPointer: nodeId })
+  }
+  if (parentAnswerLabel === 2) {
+    return Node.findOneAndUpdate({ _id: parentId },
+      { rightPointer: nodeId })
+  }
+  else return;
+}
+
+function addCreatedNodeToAdventure(adventureId, nodeId) {
+  return Adventure.findOneAndUpdate(
+    { _id: adventureId },
+    { $push: { nodes: nodeId } }
+  );
+}
+
+function createNewNode(nodeToCreate) {
+  return Node.create(nodeToCreate)
+}
+
+function getParentFromDatabase(parentId) {
+  return Node.findOne({ _id: parentId })
+}
+
+
+
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   const userId = req.user.id;
   const {
     adventureId,
-    parent, // id
+    parentId, // id
+    parentAnswerLabel, //int
     question,
     rightAnswer,
     leftAnswer } = req.body;
   //create the node
-  const newNode = {
-    parent,
+  const nodeToCreate = {
+    parent: [parentId],
     question,
     rightAnswer,
     leftAnswer
   }
-  return Node.create(newNode)
-    .then((_res) => {
-      res.json(_res);
-      // Figure out a way to make sure L,R pointers point to expected children. 
-      //  how do we go back to parent node and know 
-      // for sure which pointer to insert this newly created node id?
-    })
+  let createdNode;
 
-  //use that id to update the parent (left or right)
-  //  put that id in in node array on adventuyre
+  return createNewNode(nodeToCreate)
+    .then((_res) => {
+      createdNode = _res;
+      const nodeId = createdNode.id;
+      return updatePointerOnParent(parentId, parentAnswerLabel, nodeId);
+    })
+    .then(() => {
+      console.log(adventureId, 'GAGEAHRAHRARH')
+      const nodeId = createdNode.id;
+      return addCreatedNodeToAdventure(adventureId, nodeId);
+    })
+    .then(() => {
+      const responseObject = {
+        adventureId: adventureId,
+        createdNode,
+      }
+      console.log(responseObject);
+      return res.json(responseObject);
+    })
+    .catch(err => console.log(err));
+
 })
+
+//  how do we go back to parent node and know 
+// for sure which pointer to insert this newly created node id?
+
+//use that id to update the parent (left or right)
+//  put that id in in node array on adventuyre
+
 
 /* 
 * title: 'string'
@@ -126,3 +175,14 @@ make sure that it has valid inputs
 
 
 module.exports = { router };
+
+
+//++++++ unused helper fns
+
+// function getAdventureFromDatabase(adventureId) {
+//   return Adventure.findOne({ _id: adventureId })
+// }
+
+// function getParentFromDatabase(parentId) {
+//   return Node.findOne({ _id: parentId })
+// }

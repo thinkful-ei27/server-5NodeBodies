@@ -15,7 +15,7 @@ const adventureSchema = mongoose.Schema({
 });
 
 // adventure titles must be unique per userId
-schema.index({ title: 1, userId: 1}, { unique: true });
+adventureSchema.index({ title: 1, userId: 1}, { unique: true });
 
 adventureSchema.set('toJSON', {
   virtuals: true,     // include built-in virtual `id`
