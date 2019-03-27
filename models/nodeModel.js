@@ -13,6 +13,7 @@ const nodeSchema = mongoose.Schema({
   ending : {type: Boolean},
 });
 
+
 nodeSchema.set('toJSON', {
   virtuals: true,     // include built-in virtual `id`
   transform: (doc, ret) => {
