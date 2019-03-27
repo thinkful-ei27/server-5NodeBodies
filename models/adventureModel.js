@@ -6,16 +6,16 @@ mongoose.Promise = global.Promise;
 
 const adventureSchema = mongoose.Schema({
 
-  title: {type: String},
-  startContent: {type: String},
-  head: {type: mongoose.Schema.Types.ObjectId, ref: 'Node'},
-  nodes : [
-    {type: mongoose.Schema.Types.ObjectId, ref: 'Node'}
+  title: { type: String },
+  startContent: { type: String },
+  head: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
+  nodes: [
+    { type: mongoose.Schema.Types.ObjectId, ref: 'Node' }
   ],
 });
 
 // adventure titles must be unique per userId
-adventureSchema.index({ title: 1, userId: 1}, { unique: true });
+adventureSchema.index({ title: 1, userId: 1 }, { unique: true });
 
 adventureSchema.set('toJSON', {
   virtuals: true,     // include built-in virtual `id`
