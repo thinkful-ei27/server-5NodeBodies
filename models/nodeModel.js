@@ -5,6 +5,7 @@ mongoose.Promise = global.Promise;
 
 const nodeSchema = mongoose.Schema({
   question : {type: String},
+  videoURL : {type: String},
   parent : [{type: mongoose.Schema.Types.ObjectId, ref: 'Node'}],
   leftAnswer : {type: String},
   leftPointer : {type: mongoose.Schema.Types.ObjectId, ref: 'Node'},
