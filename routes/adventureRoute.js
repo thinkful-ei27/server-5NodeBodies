@@ -14,15 +14,17 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 //fullroute: '{BASE_URL}/api/adventure'
 
-router.get('/adventures', jwtAuth, (req, res, next) => {
+router.get('/', jwtAuth, (req, res, next) => {
   const userId = req.user.userId;
-  return Adventure
+  return Adventure.find({creatorId: userId})
+    .then(_res => {
+      console.log(_res);
+      res.json(_res);
+    })
+    .catch(err => {
+      next(err);
+    })
 })
-
-// router.get('/adventures', jwtAuth, (req, res, next) => {
-//   const userId = req.user.id;
-//   return Adventure.find({userId: userId})
-// })
 
 //  adventure/newAdventure route creates a new adventure document, head node, and adds the adventure
 // id to the user object.
