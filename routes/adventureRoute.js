@@ -14,6 +14,7 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 //fullroute: '{BASE_URL}/api/adventure'
 
+//This is a get ALL route: Finds all adventures created by the teacher
 router.get('/', jwtAuth, (req, res, next) => {
   const userId = req.user.userId;
   return Adventure.find({creatorId: userId})
@@ -22,6 +23,24 @@ router.get('/', jwtAuth, (req, res, next) => {
       res.json(_res);
     })
     .catch(err => {
+      next(err);
+    })
+})
+
+//This is a get One route: Finds only one specified adventure
+router.get('/:id', jwtAuth, (req, res, next) => {
+  const userId = req.user.userId;
+  const adventureId = req.params.id;
+  return Adventure.find({creatorId: userId, _id: adventureId})
+    .then(adventure => {
+      if(adventure.length === 0){
+        return Promise.reject(new Error('Adventure not found'));
+      }
+      res.json(adventure);
+    }).catch(err => {
+      if(err.message === 'Adventure not found'){
+        err.status = 404;
+      }
       next(err);
     })
 })
