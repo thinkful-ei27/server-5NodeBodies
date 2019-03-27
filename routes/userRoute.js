@@ -68,6 +68,7 @@ router.post('/', jsonParser, (req, res) => {
       max: 72
     }
   };
+
   const tooSmallField = Object.keys(sizedFields).find(
     field =>
       'min' in sizedFields[field] &&
@@ -95,9 +96,8 @@ router.post('/', jsonParser, (req, res) => {
   let {username, password, firstName = '', lastName = ''} = req.body;
   // Username and password come in pre-trimmed, otherwise we throw an error
   // before this
-  firstName = firstName.trim();
-  lastName = lastName.trim();
-
+    firstName = firstName.trim();
+    lastName = lastName.trim();
   return User.find({username})
     .count()
     .then(count => {
