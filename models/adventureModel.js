@@ -6,6 +6,7 @@ mongoose.Promise = global.Promise;
 
 const adventureSchema = mongoose.Schema({
 
+
   title: {type: String},
   startContent: {type: String},
   videoURL: {type: String},
@@ -16,7 +17,8 @@ const adventureSchema = mongoose.Schema({
 });
 
 // adventure titles must be unique per userId
-adventureSchema.index({ title: 1, userId: 1}, { unique: true });
+adventureSchema.index({ title: 1, userId: 1 }, { unique: true });
+
 
 adventureSchema.set('toJSON', {
   virtuals: true,     // include built-in virtual `id`

@@ -8,6 +8,7 @@ const { Adventure } = require('../models/adventureModel');
 const router = express.Router();
 const jsonParser = bodyParser.json();
 const passport = require('passport');
+const mongoose = require('mongoose');
 
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
@@ -31,14 +32,13 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     question,
     rightAnswer,
     leftAnswer,
-    parent: null,
+    parents: null,
     ending: true
     //  is this above ending to conditionally change what the ending is??
   }
   // create adventureId variable in accessible scope
   let adventureId;
-
-  return Node.create(headNode)
+  return createNewNode(headNode)
     .then((_res) => {
       if (_res) {
         const nodeId = _res.id
@@ -77,33 +77,139 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     });
 })
 
-//  adventure/newNode adds new nodes, attaches them to adventure with correct pointers
+// helper fn that updates parent node L  or R pointers with  node id.
+function updatePointerOnParent(parentId, parentAnswerLabel, nodeId) {
+  if (parentAnswerLabel === 1) {
+    return Node.findOneAndUpdate({ _id: parentId },
+      { leftPointer: nodeId })
+  }
+  if (parentAnswerLabel === 2) {
+    return Node.findOneAndUpdate({ _id: parentId },
+      { rightPointer: nodeId })
+  }
+  else return;
+}
+
+// added NEW created node to adventure
+function addCreatedNodeToAdventure(adventureId, nodeId) {
+  return Adventure.findOneAndUpdate(
+    { _id: adventureId },
+    { $push: { nodes: nodeId } }
+  );
+}
+
+// create new node helper fn
+function createNewNode(nodeToCreate) {
+  return Node.create(nodeToCreate)
+}
+
+// validation helper function to check for adventure
+function checkForAdventureInDatabase(adventureId) {
+  return Adventure.findOne({ _id: adventureId })
+    .then(adventure => {
+      if (!adventure) {
+        const err = new Error('Adventure Id does not exist in the Database')
+        err.status = 400
+        console.log(err)
+        throw err
+      } else return;
+    });
+}
+
+// checks for parent in database
+function checkForParentInDatabase(parentId) {
+  return Node.findOne({ _id: parentId })
+    .then(parent => {
+      if (!parent) {
+        const err = new Error('the parent Id does not exist in the Database')
+        err.status = 400
+        console.log(err)
+        throw err
+      } else return;
+    });
+}
+
+// makes sure current user owns the adventure they are editing
+function checkIfUserIsAdventureOwner(userId, adventureId) {
+  return User.findOne({ userId })
+    .then(user => {
+      console.log(user)
+      const adventure = user.adventures.filter(userAdventure => userAdventure === adventureId)
+      if (!adventure) {
+        const err = new Error('The user you are currently logged in as does not own this adventure!')
+        err.status = 400
+        console.log(err)
+        throw err
+      } else return;
+    })
+}
 
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   const userId = req.user.id;
+  console.log(req.user.userId)
   const {
     adventureId,
-    parent, // id
+    parentId, // id
+    parentAnswerLabel, //int
     question,
     rightAnswer,
     leftAnswer } = req.body;
-  //create the node
-  const newNode = {
-    parent,
-    question,
-    rightAnswer,
-    leftAnswer
-  }
-  return Node.create(newNode)
-    .then((_res) => {
-      res.json(_res);
-      // Figure out a way to make sure L,R pointers point to expected children. 
-      //  how do we go back to parent node and know 
-      // for sure which pointer to insert this newly created node id?
-    })
 
-  //use that id to update the parent (left or right)
-  //  put that id in in node array on adventuyre
+  // check if parent id is a valid id
+  if (!mongoose.Types.ObjectId.isValid(parentId)) {
+    const err = new Error('The `parentId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  // checks if  adventure Id is a valid id
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  let createdNode;
+
+  return checkForAdventureInDatabase(adventureId)
+    .then(() => {
+      return checkForParentInDatabase(parentId)
+    })
+    .then(() => {
+      return checkIfUserIsAdventureOwner(userId, adventureId)
+    })
+    .then(() => {
+      // create the node
+      const nodeToCreate = {
+        parents: [parentId],
+        question,
+        rightAnswer,
+        leftAnswer
+      }
+
+      return createNewNode(nodeToCreate)
+    })
+    .then((_res) => {
+      createdNode = _res;
+      const nodeId = createdNode.id;
+      return updatePointerOnParent(parentId, parentAnswerLabel, nodeId);
+    })
+    .then(() => {
+      const nodeId = createdNode.id;
+      return addCreatedNodeToAdventure(adventureId, nodeId);
+    })
+    .then(() => {
+      const responseObject = {
+        adventureId,
+        createdNode,
+      }
+      return res.json(responseObject);
+    })
+    .catch(err => {
+      console.log(err)
+      return next(err)
+    });
+
 })
 
 /* 
@@ -126,3 +232,14 @@ make sure that it has valid inputs
 
 
 module.exports = { router };
+
+
+//++++++ unused helper fns
+
+// function getAdventureFromDatabase(adventureId) {
+//   return Adventure.findOne({ _id: adventureId })
+// }
+
+// function getParentFromDatabase(parentId) {
+//   return Node.findOne({ _id: parentId })
+// }
