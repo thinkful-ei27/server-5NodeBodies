@@ -70,12 +70,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
       } else next();
     })
     .then((_res) => {
-      console.log('_res =======', _res);
-      console.log('_res.adventures =====',_res.adventures)
-      console.log('adventureId =====', adventureId);
       const adventureArr = _res.adventures
-      let tempArr = [...adventureArr, adventureId];
-      console.log('tempArr =====', tempArr);
       return User.findOneAndUpdate(
         { _id: userId },
         { adventures: [...adventureArr, adventureId]}
