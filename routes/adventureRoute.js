@@ -32,7 +32,7 @@ router.get('/', jwtAuth, (req, res, next) => {
 router.get('/:id', jwtAuth, (req, res, next) => {
   const userId = req.user.userId;
   const adventureId = req.params.id;
-  return Adventure.find({creatorId: userId, _id: adventureId})
+  return Adventure.find({creatorId: userId, _id: adventureId}).populate('nodes').populate('head')
     .then(adventure => {
       if(adventure.length === 0){
         return Promise.reject(new Error('Adventure not found'));
@@ -44,6 +44,25 @@ router.get('/:id', jwtAuth, (req, res, next) => {
       }
       next(err);
     })
+})
+
+
+router.get('/:adventureId/:nodeId', (req, res, next) => {
+  const adventureId = req.params.adventureId;
+  const nodeId = req.params.nodeId;
+  return Node.find({_id: nodeId})
+  .then(node => {
+    if (node.length === 0){
+      return Promise.reject(new Error ('Node not found'))
+    }
+    res.json(node)
+   })
+  .catch(err => {
+    if(err.message === 'Node not found'){
+      err.status = 404;
+    }
+    next(err);
+  })
 })
 
 //  adventure/newAdventure route creates a new adventure document, head node, and adds the adventure
@@ -74,6 +93,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   }
   // create adventureId variable in accessible scope
   let adventureId;
+  let adventure
   return createNewNode(headNode)
     .then((_res) => {
       if (_res) {
@@ -93,6 +113,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     .then((_res) => {
       if (_res) {
         adventureId = _res.id
+        adventure = _res
         return User.findOne({ _id: userId })
       } else next();
     })
@@ -104,7 +125,10 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
       )
     })
     .then((_res) => {
-      return res.json(adventureId)
+      return Adventure.findOne({_id: adventureId}).populate('nodes').populate('head')
+    })
+    .then((_res) => {
+      return res.json(_res)
     })
     .catch(err => {
       console.log(err);
