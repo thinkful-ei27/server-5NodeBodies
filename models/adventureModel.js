@@ -31,6 +31,6 @@ adventureSchema.set('toJSON', {
   }
 })
 
-const Adventure = mongoose.model('Adventure', adventureSchema);
+module.exports = mongoose.model('Adventure', adventureSchema);
 
-module.exports = { Adventure };
+// module.exports = { Adventure };
