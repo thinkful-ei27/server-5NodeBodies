@@ -40,4 +40,30 @@ router.get('/adventure/:id', (req, res, next) => {
   })
 })
 
+router.get('/:adventureId/:nodeId', (req, res, next) => {
+  const adventureId = req.params.adventureId;
+  const nodeId = req.params.nodeId;
+  // return Adventure.find({_id: adventureId})
+  // .then(adventure => {
+  //   if(adventure.length === 0){
+  //     return Promise.reject(new Error('Adventure not found'));
+  //   }
+  // })
+  // .then(head => {
+    return Node.find({_id: nodeId})
+  // })
+  .then(node => {
+    if (node.length === 0){
+      return Promise.reject(new Error ('Node not found'))
+    }
+    res.json(node)
+   })
+  .catch(err => {
+    if(err.message === 'Node not found'){
+      err.status = 404;
+    }
+    next(err);
+  })
+})
+
 module.exports = { router };
