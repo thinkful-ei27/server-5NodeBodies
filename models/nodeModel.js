@@ -33,7 +33,6 @@ nodeSchema.set('toJSON', {
 
 
 
-module.exports = mongoose.model('Node', nodeSchema);
+let Node = mongoose.model('Node', nodeSchema);
 
-
-// module.exports = { Node };
+module.exports = { Node };

@@ -16,7 +16,7 @@ const UserSchema = mongoose.Schema({
   },
   firstName: { type: String, default: '' },
   lastName: { type: String, default: '' },
-  adventures: [{type: mongoose.Schema.Types.ObjectId, ref: 'Adventure'}]
+  adventures: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Adventure' }]
 });
 /*
 wordList: [
@@ -58,6 +58,6 @@ UserSchema.statics.hashPassword = function (password) {
   return bcrypt.hash(password, 10);
 };
 
-module.exports = mongoose.model('User', UserSchema);
+let User = mongoose.model('User', UserSchema);
 
-// module.exports = { User };
+module.exports = { User };

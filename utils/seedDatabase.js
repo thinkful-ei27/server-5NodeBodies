@@ -4,15 +4,15 @@ const mongoose = require('mongoose');
 
 const { DATABASE_URL } = require('../config');
 
-const User = require('../models/userModel');
-const Adventure = require('../models/adventureModel');
-const Node = require('../models/nodeModel');
+const { User } = require('../models/userModel');
+const { Adventure } = require('../models/adventureModel');
+const { Node } = require('../models/nodeModel');
 
-const {nodes, adventures, users} = require('../database/data');
+const { nodes, adventures, users } = require('../database/data');
 
 
 console.log(`Connecting to mongodb at 'mongodb://testUser:Testing123@ds223756.mlab.com:23756/adventure-learning-test'`);
- mongoose.connect('mongodb://testUser:Testing123@ds223756.mlab.com:23756/adventure-learning-test', { useNewUrlParser: true, useCreateIndex : true })
+mongoose.connect('mongodb://testUser:Testing123@ds223756.mlab.com:23756/adventure-learning-test', { useNewUrlParser: true, useCreateIndex: true })
   .then(() => {
     console.log('Deleting Data...');
     return mongoose.connection.db.dropDatabase();
