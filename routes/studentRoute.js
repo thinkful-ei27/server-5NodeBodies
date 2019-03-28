@@ -17,6 +17,11 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 router.get('/adventure/:id', (req, res, next) => {
   const adventureId = req.params.id;
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
   return Adventure.find({_id: adventureId})
   .then(adventure => {
     if(adventure.length === 0){
@@ -50,7 +55,17 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
   //   }
   // })
   // .then(head => {
-    return Node.find({_id: nodeId})
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  if (!mongoose.Types.ObjectId.isValid(nodeId)) {
+    const err = new Error('The `nodeId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  return Node.find({_id: nodeId})
   // })
   .then(node => {
     if (node.length === 0){
