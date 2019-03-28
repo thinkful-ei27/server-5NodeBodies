@@ -4,14 +4,18 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 const nodeSchema = mongoose.Schema({
-  question : {type: String},
-  parent : [{type: mongoose.Schema.Types.ObjectId, ref: 'Node'}],
-  leftAnswer : {type: String},
-  leftPointer : {type: mongoose.Schema.Types.ObjectId, ref: 'Node'},
-  rightAnswer : {type: String},
-  rightPointer : {type: mongoose.Schema.Types.ObjectId, ref: 'Node'},
-  ending : {type: Boolean},
+
+  question: { type: String },
+  videoURL: { type: String },
+  parents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Node' }],
+  leftAnswer: { type: String },
+  leftPointer: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
+  rightAnswer: { type: String },
+  rightPointer: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
+  ending: { type: Boolean },
+
 });
+
 
 nodeSchema.set('toJSON', {
   virtuals: true,     // include built-in virtual `id`

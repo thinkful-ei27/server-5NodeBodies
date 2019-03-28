@@ -14,7 +14,8 @@ const UserSchema = mongoose.Schema({
     type: String,
     required: true
   },
-  name: { type: String, default: '' },
+  firstName: { type: String, default: '' },
+  lastName: { type: String, default: '' },
   adventures: [{type: mongoose.Schema.Types.ObjectId, ref: 'Adventure'}]
 });
 /*
@@ -35,7 +36,8 @@ UserSchema.methods.serialize = function () {
   return {
     userId: this._id || '',
     username: this.username || '',
-    name: this.name || '',
+    firstName: this.firstName || '',
+    lastName: this.lastName || '',
     adventures: this.adventures || []
   };
 };
