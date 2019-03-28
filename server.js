@@ -15,6 +15,7 @@ const passport = require('passport');
 const { router: usersRouter } = require('./routes/userRoute');
 const { router: authRouter, localStrategy, jwtStrategy } = require('./auth');
 const { router: adventureRouter } = require('./routes/adventureRoute');
+const { router: studentRouter } = require('./routes/studentRoute');
 
 
 
@@ -44,15 +45,9 @@ passport.use(jwtStrategy);
 app.use('/api/users/', usersRouter);
 app.use('/api/auth/', authRouter);
 app.use('/api/adventure', adventureRouter);
+app.use('/api/student', studentRouter);
 
 const jwtAuth = passport.authenticate('jwt', { session: false });
-
-// A protected endpoint which needs a valid JWT to access it
-app.get('/api/protected', jwtAuth, (req, res) => {
-  return res.json({
-    data: 'rosebud'
-  });
-});
 
 // Custom 404 Not Found route handler
 app.use((req, res, next) => {
