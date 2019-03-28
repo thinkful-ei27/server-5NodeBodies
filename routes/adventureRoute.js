@@ -15,17 +15,42 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 //fullroute: '{BASE_URL}/api/adventure'
 
-// router.get('/adventures', jwtAuth, (req, res, next) => {
-//   const userId = req.user.id;
-//   return Adventure.find({userId: userId})
-// })
+//This is a get ALL route: Finds all adventures created by the teacher
+router.get('/', jwtAuth, (req, res, next) => {
+  const userId = req.user.userId;
+  return Adventure.find({creatorId: userId})
+    .then(_res => {
+      console.log(_res);
+      res.json(_res);
+    })
+    .catch(err => {
+      next(err);
+    })
+})
+
+//This is a get One route: Finds only one specified adventure
+router.get('/:id', jwtAuth, (req, res, next) => {
+  const userId = req.user.userId;
+  const adventureId = req.params.id;
+  return Adventure.find({creatorId: userId, _id: adventureId})
+    .then(adventure => {
+      if(adventure.length === 0){
+        return Promise.reject(new Error('Adventure not found'));
+      }
+      res.json(adventure);
+    }).catch(err => {
+      if(err.message === 'Adventure not found'){
+        err.status = 404;
+      }
+      next(err);
+    })
+})
 
 //  adventure/newAdventure route creates a new adventure document, head node, and adds the adventure
 // id to the user object.
 router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   const userId = req.user.userId;
-  console.log(req.user);
-  console.log(userId);
+  const username = req.user.username;
   const { title,
     startContent,
     question,
@@ -59,6 +84,8 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
           videoURL,
           head: nodeId,
           nodes: [nodeId],
+          creator: username,
+          creatorId: userId
         }
         return Adventure.create(adventureObj)
       } else next();
