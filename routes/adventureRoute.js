@@ -161,12 +161,12 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 })
 
 // helper fn that updates parent node L  or R pointers with  node id.
-function updatePointerOnParent(parentId, parentAnswerLabel, nodeId) {
-  if (parentAnswerLabel === 1) {
+function updatePointerOnParent(parentId, parentInt, nodeId) {
+  if (parentInt === 1) {
     return Node.findOneAndUpdate({ _id: parentId },
       { leftPointer: nodeId })
   }
-  if (parentAnswerLabel === 2) {
+  if (parentInt === 2) {
     return Node.findOneAndUpdate({ _id: parentId },
       { rightPointer: nodeId })
   }
@@ -233,7 +233,7 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   const {
     adventureId,
     parentId, // id
-    parentAnswerLabel, //int
+    parentInt, //int
     question,
     rightAnswer,
     leftAnswer } = req.body;
@@ -275,7 +275,7 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     .then((_res) => {
       createdNode = _res;
       const nodeId = createdNode.id;
-      return updatePointerOnParent(parentId, parentAnswerLabel, nodeId);
+      return updatePointerOnParent(parentId, parentInt, nodeId);
     })
     .then(() => {
       const nodeId = createdNode.id;
