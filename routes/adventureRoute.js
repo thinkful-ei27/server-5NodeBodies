@@ -32,6 +32,16 @@ router.get('/', jwtAuth, (req, res, next) => {
 router.get('/:id', jwtAuth, (req, res, next) => {
   const userId = req.user.userId;
   const adventureId = req.params.id;
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    const err = new Error('The `userId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
   return Adventure.find({creatorId: userId, _id: adventureId}).populate('nodes').populate('head')
     .then(adventure => {
       if(adventure.length === 0){
@@ -50,6 +60,16 @@ router.get('/:id', jwtAuth, (req, res, next) => {
 router.get('/:adventureId/:nodeId', (req, res, next) => {
   const adventureId = req.params.adventureId;
   const nodeId = req.params.nodeId;
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  if (!mongoose.Types.ObjectId.isValid(nodeId)) {
+    const err = new Error('The `nodeId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
   return Node.find({_id: nodeId})
   .then(node => {
     if (node.length === 0){
