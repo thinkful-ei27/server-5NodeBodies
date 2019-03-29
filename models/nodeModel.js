@@ -12,7 +12,8 @@ const nodeSchema = mongoose.Schema({
   leftPointer: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
   rightAnswer: { type: String },
   rightPointer: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
-  ending: { type: Boolean },
+  ending: { type: Boolean, default: false },
+  description: { type: String }
 
 });
 
