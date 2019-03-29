@@ -18,7 +18,7 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 //This is a get ALL route: Finds all adventures created by the teacher
 router.get('/', jwtAuth, (req, res, next) => {
   const userId = req.user.userId;
-  return Adventure.find({creatorId: userId})
+  return Adventure.find({ creatorId: userId })
     .then(_res => {
       console.log(_res);
       res.json(_res);
@@ -32,14 +32,53 @@ router.get('/', jwtAuth, (req, res, next) => {
 router.get('/:id', jwtAuth, (req, res, next) => {
   const userId = req.user.userId;
   const adventureId = req.params.id;
-  return Adventure.find({creatorId: userId, _id: adventureId})
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    const err = new Error('The `userId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  return Adventure.findOne({ creatorId: userId, _id: adventureId }).populate('nodes').populate('head')
     .then(adventure => {
-      if(adventure.length === 0){
+      if (adventure.length === 0) {
         return Promise.reject(new Error('Adventure not found'));
       }
       res.json(adventure);
     }).catch(err => {
-      if(err.message === 'Adventure not found'){
+      if (err.message === 'Adventure not found') {
+        err.status = 404;
+      }
+      next(err);
+    })
+})
+
+
+router.get('/:adventureId/:nodeId', (req, res, next) => {
+  const adventureId = req.params.adventureId;
+  const nodeId = req.params.nodeId;
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  if (!mongoose.Types.ObjectId.isValid(nodeId)) {
+    const err = new Error('The `nodeId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  return Node.find({ _id: nodeId })
+    .then(node => {
+      if (node.length === 0) {
+        return Promise.reject(new Error('Node not found'))
+      }
+      res.json(node)
+    })
+    .catch(err => {
+      if (err.message === 'Node not found') {
         err.status = 404;
       }
       next(err);
@@ -74,6 +113,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   }
   // create adventureId variable in accessible scope
   let adventureId;
+  let adventure
   return createNewNode(headNode)
     .then((_res) => {
       if (_res) {
@@ -93,6 +133,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     .then((_res) => {
       if (_res) {
         adventureId = _res.id
+        adventure = _res
         return User.findOne({ _id: userId })
       } else next();
     })
@@ -100,11 +141,14 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
       const adventureArr = _res.adventures
       return User.findOneAndUpdate(
         { _id: userId },
-        { adventures: [...adventureArr, adventureId]}
+        { adventures: [...adventureArr, adventureId] }
       )
     })
     .then((_res) => {
-      return res.json(adventureId)
+      return Adventure.findOne({ _id: adventureId }).populate('nodes').populate('head')
+    })
+    .then((_res) => {
+      return res.json(_res)
     })
     .catch(err => {
       console.log(err);
@@ -117,12 +161,12 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 })
 
 // helper fn that updates parent node L  or R pointers with  node id.
-function updatePointerOnParent(parentId, parentAnswerLabel, nodeId) {
-  if (parentAnswerLabel === 1) {
+function updatePointerOnParent(parentId, parentInt, nodeId) {
+  if (parentInt === 1) {
     return Node.findOneAndUpdate({ _id: parentId },
       { leftPointer: nodeId })
   }
-  if (parentAnswerLabel === 2) {
+  if (parentInt === 2) {
     return Node.findOneAndUpdate({ _id: parentId },
       { rightPointer: nodeId })
   }
@@ -189,10 +233,11 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   const {
     adventureId,
     parentId, // id
-    parentAnswerLabel, //int
+    parentInt, //int
     question,
     rightAnswer,
-    leftAnswer } = req.body;
+    leftAnswer,
+    videoURL } = req.body;
 
   // check if parent id is a valid id
   if (!mongoose.Types.ObjectId.isValid(parentId)) {
@@ -223,7 +268,8 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
         parents: [parentId],
         question,
         rightAnswer,
-        leftAnswer
+        leftAnswer,
+        videoURL
       }
 
       return createNewNode(nodeToCreate)
@@ -231,7 +277,7 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     .then((_res) => {
       createdNode = _res;
       const nodeId = createdNode.id;
-      return updatePointerOnParent(parentId, parentAnswerLabel, nodeId);
+      return updatePointerOnParent(parentId, parentInt, nodeId);
     })
     .then(() => {
       const nodeId = createdNode.id;
