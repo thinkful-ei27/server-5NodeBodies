@@ -236,7 +236,8 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     parentInt, //int
     question,
     rightAnswer,
-    leftAnswer } = req.body;
+    leftAnswer,
+    videoURL } = req.body;
 
   // check if parent id is a valid id
   if (!mongoose.Types.ObjectId.isValid(parentId)) {
@@ -267,7 +268,8 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
         parents: [parentId],
         question,
         rightAnswer,
-        leftAnswer
+        leftAnswer,
+        videoURL
       }
 
       return createNewNode(nodeToCreate)
