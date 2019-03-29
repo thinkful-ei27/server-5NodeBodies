@@ -18,7 +18,7 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 //This is a get ALL route: Finds all adventures created by the teacher
 router.get('/', jwtAuth, (req, res, next) => {
   const userId = req.user.userId;
-  return Adventure.find({creatorId: userId})
+  return Adventure.find({ creatorId: userId })
     .then(_res => {
       console.log(_res);
       res.json(_res);
@@ -42,14 +42,14 @@ router.get('/:id', jwtAuth, (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  return Adventure.find({creatorId: userId, _id: adventureId}).populate('nodes').populate('head')
+  return Adventure.findOne({ creatorId: userId, _id: adventureId }).populate('nodes').populate('head')
     .then(adventure => {
-      if(adventure.length === 0){
+      if (adventure.length === 0) {
         return Promise.reject(new Error('Adventure not found'));
       }
       res.json(adventure);
     }).catch(err => {
-      if(err.message === 'Adventure not found'){
+      if (err.message === 'Adventure not found') {
         err.status = 404;
       }
       next(err);
@@ -70,19 +70,19 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  return Node.find({_id: nodeId})
-  .then(node => {
-    if (node.length === 0){
-      return Promise.reject(new Error ('Node not found'))
-    }
-    res.json(node)
-   })
-  .catch(err => {
-    if(err.message === 'Node not found'){
-      err.status = 404;
-    }
-    next(err);
-  })
+  return Node.find({ _id: nodeId })
+    .then(node => {
+      if (node.length === 0) {
+        return Promise.reject(new Error('Node not found'))
+      }
+      res.json(node)
+    })
+    .catch(err => {
+      if (err.message === 'Node not found') {
+        err.status = 404;
+      }
+      next(err);
+    })
 })
 
 //  adventure/newAdventure route creates a new adventure document, head node, and adds the adventure
@@ -141,11 +141,11 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
       const adventureArr = _res.adventures
       return User.findOneAndUpdate(
         { _id: userId },
-        { adventures: [...adventureArr, adventureId]}
+        { adventures: [...adventureArr, adventureId] }
       )
     })
     .then((_res) => {
-      return Adventure.findOne({_id: adventureId}).populate('nodes').populate('head')
+      return Adventure.findOne({ _id: adventureId }).populate('nodes').populate('head')
     })
     .then((_res) => {
       return res.json(_res)
