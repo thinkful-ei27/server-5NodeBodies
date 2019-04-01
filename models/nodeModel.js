@@ -7,13 +7,17 @@ const nodeSchema = mongoose.Schema({
 
   question: { type: String },
   videoURL: { type: String },
+  textContent: { type: String },
   parents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Node' }],
-  leftAnswer: { type: String },
-  leftPointer: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
-  rightAnswer: { type: String },
-  rightPointer: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
+  answerA: { type: String },
+  pointerA: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
+  answerB: { type: String },
+  pointerB: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
+  answerC: { type: String },
+  pointerC: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
+  answerD: { type: String },
+  pointerD: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
   ending: { type: Boolean },
-
 });
 
 
