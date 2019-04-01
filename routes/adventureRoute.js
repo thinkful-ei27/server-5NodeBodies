@@ -93,9 +93,11 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   const { title,
     startContent,
     question,
-    rightAnswer,
+    answerB,
     videoURL,
-    leftAnswer } = req.body;
+    answerA,
+    answerC,
+    answerD } = req.body;
 
   if (!title) {
     const error = new Error('Please provide a title for your adventure!')
@@ -105,8 +107,10 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 
   const headNode = {
     question,
-    rightAnswer,
-    leftAnswer,
+    answerB,
+    answerA,
+    answerC,
+    answerD,
     parents: null,
     ending: true
     //  is this above ending to conditionally change what the ending is??
@@ -160,15 +164,98 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     });
 })
 
+router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
+  const userId = req.user.id;
+  console.log(req.user.userId)
+  const {
+    adventureId,
+    parentId, // id
+    parentInt, //int
+    question,
+    answerB,
+    answerA,
+    answerC,
+    answerD,
+    videoURL } = req.body;
+
+  // check if parent id is a valid id
+  if (!mongoose.Types.ObjectId.isValid(parentId)) {
+    const err = new Error('The `parentId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  // checks if  adventure Id is a valid id
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  let createdNode;
+
+  return checkForAdventureInDatabase(adventureId)
+    .then(() => {
+      return checkForParentInDatabase(parentId)
+    })
+    .then(() => {
+      return checkIfUserIsAdventureOwner(userId, adventureId)
+    })
+    .then(() => {
+      // create the node
+      const nodeToCreate = {
+        parents: [parentId],
+        question,
+        answerB,
+        answerA,
+        answerC,
+        answerD,
+        videoURL
+      }
+
+      return createNewNode(nodeToCreate)
+    })
+    .then((_res) => {
+      createdNode = _res;
+      const nodeId = createdNode.id;
+      return updatePointerOnParent(parentId, parentInt, nodeId);
+    })
+    .then(() => {
+      const nodeId = createdNode.id;
+      return addCreatedNodeToAdventure(adventureId, nodeId);
+    })
+    .then(() => {
+      const responseObject = {
+        adventureId,
+        createdNode,
+      }
+      return res.json(responseObject);
+    })
+    .catch(err => {
+      console.log(err)
+      return next(err)
+    });
+
+})
+
+
 // helper fn that updates parent node L  or R pointers with  node id.
 function updatePointerOnParent(parentId, parentInt, nodeId) {
   if (parentInt === 1) {
     return Node.findOneAndUpdate({ _id: parentId },
-      { leftPointer: nodeId })
+      { pointerA: nodeId })
   }
   if (parentInt === 2) {
     return Node.findOneAndUpdate({ _id: parentId },
-      { rightPointer: nodeId })
+      { pointerB: nodeId })
+  }
+  if (parentInt === 3) {
+    return Node.findOneAndUpdate({ _id: parentId },
+      { pointerC: nodeId })
+  }
+  if (parentInt === 4) {
+    return Node.findOneAndUpdate({ _id: parentId },
+      { pointerD: nodeId })
   }
   else return;
 }
@@ -227,104 +314,5 @@ function checkIfUserIsAdventureOwner(userId, adventureId) {
     })
 }
 
-router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
-  const userId = req.user.id;
-  console.log(req.user.userId)
-  const {
-    adventureId,
-    parentId, // id
-    parentInt, //int
-    question,
-    rightAnswer,
-    leftAnswer,
-    videoURL } = req.body;
-
-  // check if parent id is a valid id
-  if (!mongoose.Types.ObjectId.isValid(parentId)) {
-    const err = new Error('The `parentId` is not valid');
-    err.status = 400;
-    return next(err);
-  }
-
-  // checks if  adventure Id is a valid id
-  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
-    const err = new Error('The `adventureId` is not valid');
-    err.status = 400;
-    return next(err);
-  }
-
-  let createdNode;
-
-  return checkForAdventureInDatabase(adventureId)
-    .then(() => {
-      return checkForParentInDatabase(parentId)
-    })
-    .then(() => {
-      return checkIfUserIsAdventureOwner(userId, adventureId)
-    })
-    .then(() => {
-      // create the node
-      const nodeToCreate = {
-        parents: [parentId],
-        question,
-        rightAnswer,
-        leftAnswer,
-        videoURL
-      }
-
-      return createNewNode(nodeToCreate)
-    })
-    .then((_res) => {
-      createdNode = _res;
-      const nodeId = createdNode.id;
-      return updatePointerOnParent(parentId, parentInt, nodeId);
-    })
-    .then(() => {
-      const nodeId = createdNode.id;
-      return addCreatedNodeToAdventure(adventureId, nodeId);
-    })
-    .then(() => {
-      const responseObject = {
-        adventureId,
-        createdNode,
-      }
-      return res.json(responseObject);
-    })
-    .catch(err => {
-      console.log(err)
-      return next(err)
-    });
-
-})
-
-/* 
-* title: 'string'
-* startTextContent: 'descripiton (could reading could be video url)
-* startUrlcontent:
-* firstNodequestion:
-* leftAnswer,
-* rightAnswer,
-* }
-
-validate user.id
-
-make sure that it has valid inputs
-(if no first question/ answers, require them)
-
-/api/adventure/buildAventure
-
-*/
-
 
 module.exports = { router };
-
-
-//++++++ unused helper fns
-
-// function getAdventureFromDatabase(adventureId) {
-//   return Adventure.findOne({ _id: adventureId })
-// }
-
-// function getParentFromDatabase(parentId) {
-//   return Node.findOne({ _id: parentId })
-// }
