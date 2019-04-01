@@ -98,6 +98,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     answerA,
     answerC,
     answerD,
+    videoURL,
     textContent } = req.body;
 
   if (!title) {
@@ -115,7 +116,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     answerC,
     answerD,
     parents: null,
-    ending: true
+    ending: false
     //  is this above ending to conditionally change what the ending is??
   }
   // create adventureId variable in accessible scope
