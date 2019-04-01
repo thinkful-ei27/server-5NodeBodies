@@ -9,7 +9,7 @@ const adventureSchema = mongoose.Schema({
 
   title: { type: String },
   startContent: { type: String },
-  videoURL: { type: String },
+  startVideoURL: { type: String },
   creator: { type: String },
   //Should we have a description? (Useful for teachers and students)
   creatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

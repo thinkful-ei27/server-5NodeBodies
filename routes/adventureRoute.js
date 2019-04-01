@@ -94,10 +94,11 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     startContent,
     question,
     answerB,
-    videoURL,
+    startVideoURL,
     answerA,
     answerC,
-    answerD } = req.body;
+    answerD,
+    textContent } = req.body;
 
   if (!title) {
     const error = new Error('Please provide a title for your adventure!')
@@ -107,6 +108,8 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 
   const headNode = {
     question,
+    textContent,
+    videoURL,
     answerB,
     answerA,
     answerC,
@@ -125,7 +128,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
         const adventureObj = {
           title,
           startContent,
-          videoURL,
+          startVideoURL,
           head: nodeId,
           nodes: [nodeId],
           creator: username,
@@ -176,7 +179,8 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     answerA,
     answerC,
     answerD,
-    videoURL } = req.body;
+    videoURL,
+    textContent } = req.body;
 
   // check if parent id is a valid id
   if (!mongoose.Types.ObjectId.isValid(parentId)) {
@@ -210,6 +214,7 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
         answerA,
         answerC,
         answerD,
+        textContent,
         videoURL
       }
 

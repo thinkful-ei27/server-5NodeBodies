@@ -7,7 +7,7 @@ const nodeSchema = mongoose.Schema({
 
   question: { type: String },
   videoURL: { type: String },
-  text: { type: String },
+  textContent: { type: String },
   parents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Node' }],
   answerA: { type: String },
   pointerA: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
