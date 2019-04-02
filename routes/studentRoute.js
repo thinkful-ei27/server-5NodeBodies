@@ -22,7 +22,7 @@ router.get('/adventure/:id', (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  return Adventure.find({_id: adventureId})
+  return Adventure.findOne({_id: adventureId})
   .then(adventure => {
     if(adventure.length === 0){
       return Promise.reject(new Error('Adventure not found'));
@@ -65,7 +65,7 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  return Node.find({_id: nodeId})
+  return Node.findOne({_id: nodeId})
   // })
   .then(node => {
     if (node.length === 0){
