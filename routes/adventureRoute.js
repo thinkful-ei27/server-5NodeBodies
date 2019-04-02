@@ -20,7 +20,6 @@ router.get('/', jwtAuth, (req, res, next) => {
   const userId = req.user.userId;
   return Adventure.find({ creatorId: userId })
     .then(_res => {
-      console.log(_res);
       res.json(_res);
     })
     .catch(err => {
@@ -159,7 +158,6 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
       return res.json(_res)
     })
     .catch(err => {
-      console.log(err);
       if (err.code === 11000) {
         err = new Error('You already have an Adventure with this title. Pick a unique title!');
         err.status = 400;
@@ -170,7 +168,6 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   const userId = req.user.id;
-  console.log(req.user.userId)
   const {
     adventureId,
     parentId, // id
@@ -238,11 +235,119 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
       return res.json(responseObject);
     })
     .catch(err => {
-      console.log(err)
       return next(err)
     });
+})
+
+router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
+  const adventureId = req.params.adventureId;
+  const nodeId = req.params.nodeId;
+  const userId = req.user.id;
+  const {
+    parentInt, //int
+  } = req.body;
+
+  // TODO, update route for ending nodes. 
+  // TODO update route for multiple parents
+
+  const updateableFields = [
+    'parents',
+    'question',
+    'answerA',
+    'answerB',
+    'answerC',
+    'answerD',
+    'videoURL',
+    'textContent',
+    'ending',
+  ];
+
+  const nodeUpdates = {}
+
+  updateableFields.forEach(field => {
+    if (field in req.body) {
+      nodeUpdates[field] = req.body[field];
+    }
+  });
+
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  if (!mongoose.Types.ObjectId.isValid(nodeId)) {
+    const err = new Error('The `nodeId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  if (nodeUpdates.question === '') {
+    const err = new Error('Missing `question` in request body');
+    err.status = 400;
+    return next(err);
+  }
+  if (nodeUpdates.answerA === '' || !nodeUpdates.answerA) {
+    const err = new Error('Must provide at least one answer. `answerA` in request body');
+    err.status = 400;
+    return next(err);
+  }
+  if (!nodeUpdates.ending) {
+    nodeUpdates.ending = false;
+  }
+
+  if (nodeUpdates.parents) {
+    nodeUpdates.parents.forEach(parent => {
+      Node.findById(parent)
+        .then((result) => {
+          if (!result) {
+            const err = new Error('The `parents` array contains an invalid id');
+            err.status = 400;
+            return next(err);
+          } else return;
+        });
+    });
+  }
+
+  // remove optional values if not provided
+  const nodeUpdatesAndUnsetValues = removeOptionalValuesifAbsent(nodeUpdates)
+
+  return checkForAdventureInDatabase(adventureId)
+    .then(() => {
+      return checkIfUserIsAdventureOwner(userId, adventureId)
+    })
+    .then(() => {
+      return Node.findByIdAndUpdate({ _id: nodeId }, nodeUpdatesAndUnsetValues, { new: true })
+    })
+    .then(result =>
+      res.json(result)
+    )
+    .catch(err => next(err))
 
 })
+
+function removeOptionalValuesifAbsent(nodeUpdates) {
+
+  const optionalValues = [
+    'answerB',
+    'answerC',
+    'answerD',
+    'videoURL',
+    'textContent',];
+
+  const valuesToUnset = {}
+
+  optionalValues.forEach(value => {
+    if (nodeUpdates[value] === '' || !nodeUpdates[value]) {
+      delete nodeUpdates[value];
+      return valuesToUnset[value] = ''
+    }
+  })
+
+  const unusedOptionalValues = Object.keys(valuesToUnset);
+  if (unusedOptionalValues.length > 0) {
+    nodeUpdates.$unset = valuesToUnset
+  }
+  return nodeUpdates;
+};
 
 
 // helper fn that updates parent node L  or R pointers with  node id.
@@ -309,12 +414,10 @@ function checkForParentInDatabase(parentId) {
 function checkIfUserIsAdventureOwner(userId, adventureId) {
   return User.findOne({ userId })
     .then(user => {
-      console.log(user)
       const adventure = user.adventures.filter(userAdventure => userAdventure === adventureId)
       if (!adventure) {
         const err = new Error('The user you are currently logged in as does not own this adventure!')
         err.status = 400
-        console.log(err)
         throw err
       } else return;
     })
