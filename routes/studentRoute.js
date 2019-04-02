@@ -15,6 +15,30 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 //fullroute: '{BASE_URL}/api/student'
 // 5c9ce70225a9ad1651bf9fe6
 
+
+
+router.get('/search', (req, res, next) => {
+  return Adventure.find()
+    .then(adventures => {
+      return res.json(adventures)
+    })
+    .catch(err => {
+      next(err);
+    })
+});
+
+router.get('/search/:searchTerm', (req, res, next) => {
+  let searchTerm = req.params.searchTerm;
+  return Adventure.find({title: {$regex: searchTerm}})
+    .then(adventures => {
+      return res.json(adventures);
+    })
+    .catch(err => {
+      next(err);
+    })
+})
+
+
 router.get('/adventure/:id', (req, res, next) => {
   const adventureId = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
