@@ -31,9 +31,15 @@ router.get('/search/:searchTerm', (req, res, next) => {
   let searchTerm = req.params.searchTerm;
   return Adventure.find({title: {$regex: searchTerm}})
     .then(adventures => {
+      if(adventures.length === 0){
+        return Promise.reject(new Error('No Matching Adventures Found'));
+      }
       return res.json(adventures);
     })
     .catch(err => {
+      if(err.message === 'No Matching Adventures Found'){
+        err.status = 404
+      }
       next(err);
     })
 })
