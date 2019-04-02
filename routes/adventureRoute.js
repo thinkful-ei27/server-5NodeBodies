@@ -43,7 +43,7 @@ router.get('/:id', jwtAuth, (req, res, next) => {
   }
   return Adventure.findOne({ creatorId: userId, _id: adventureId }).populate('nodes').populate('head')
     .then(adventure => {
-      if (adventure.length === 0) {
+      if (!adventure) {
         return Promise.reject(new Error('Adventure not found'));
       }
       res.json(adventure);
@@ -51,7 +51,7 @@ router.get('/:id', jwtAuth, (req, res, next) => {
       if (err.message === 'Adventure not found') {
         err.status = 404;
       }
-      next(err);
+      return next(err);
     })
 })
 
@@ -166,6 +166,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     });
 })
 
+// TODO change this route to include adventureID in url
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   const userId = req.user.id;
   const {
@@ -323,6 +324,92 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
     .catch(err => next(err))
 
 })
+
+
+// DEL a single node.
+router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
+  const nodeId = req.params.nodeId;
+
+  if (!mongoose.Types.ObjectId.isValid(nodeId)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  const removeNode = Node.findByIdAndRemove(nodeId);
+
+  const updateAdventure = Adventure.updateOne(
+    { nodes: nodeId },
+    { $pull: { nodes: nodeId } }
+  );
+
+  const updatePointerA = Node.updateMany(
+    { pointerA: nodeId },
+    { $unset: { pointerA: nodeId } }
+  )
+  const updatePointerB = Node.updateMany(
+    { pointerB: nodeId },
+    { $unset: { pointerB: nodeId } }
+  )
+  const updatePointerC = Node.updateMany(
+    { pointerC: nodeId },
+    { $unset: { pointerC: nodeId } }
+  )
+  const updatePointerD = Node.updateMany(
+    { pointerD: nodeId },
+    { $unset: { pointerD: nodeId } }
+  )
+
+  return Promise.all([
+    removeNode,
+    updateAdventure,
+    updatePointerA,
+    updatePointerB,
+    updatePointerC,
+    updatePointerD])
+    .then(() => {
+      return res.sendStatus(204);
+    })
+    .catch(err => {
+      return next(err);
+    });
+})
+
+
+// DEL an entire adventure
+router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
+  const adventureId = req.params.adventureId;
+
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  return Adventure.findById(adventureId)
+    .then(adventure => {
+      return adventure.nodes.forEach(node => {
+        return Node.findByIdAndRemove(node)
+          .then(()=>{
+            return;
+          })
+      })
+    }).then(() => {
+      return Adventure.findByIdAndDelete(adventureId);
+    })
+    .then(() => {
+      return res.sendStatus(204);
+    })
+    .catch(err => {
+      return next(err)
+    })
+
+
+})
+
+
+
+
 
 function removeOptionalValuesifAbsent(nodeUpdates) {
 
