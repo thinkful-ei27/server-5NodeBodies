@@ -290,17 +290,61 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     });
 })
 
+router.post('/linkNodes', jwtAuth, jsonParser, (req, res, next) => {
+  const userId = req.user.id;
+  const { adventureId, parentId, childId, parentInt } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(parentId) || !mongoose.Types.ObjectId.isValid(childId)) {
+    const err = new Error('The `nodeId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  // validate all the ids
+  return Promise.all([
+    checkForAdventureInDatabase(adventureId),
+    checkForParentInDatabase(parentId),
+    checkForParentInDatabase(childId),
+    checkIfUserIsAdventureOwner(userId, adventureId),
+  ])
+    .then(() => {
+      // update Nodes with links
+      return updatePointerOnParent(parentId, parentInt, childId)
+    })
+    .then(() => {
+      return Node.findOne({ _id: childId })
+    })
+    .then((childNode) => {
+      const parents = childNode.parents;
+      console.log(parents)
+      return Node.findOneAndUpdate({ _id: childId },
+        { parents: [...parents, parentId] }, { new: true })
+    })
+    .then(() => {
+
+      return res.status(204).end()
+    })
+    .catch(
+      err => next(err)
+    )
+
+})
+
 router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
   const adventureId = req.params.adventureId;
   const nodeId = req.params.nodeId;
   const userId = req.user.id;
+
   const {
     parentInt, //int
   } = req.body;
 
   // TODO, update route for ending nodes. 
-  // TODO update route for multiple parents
-
   const updateableFields = [
     'parents',
     'question',
@@ -357,10 +401,8 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
         });
     });
   }
-
   // remove optional values if not provided
   const nodeUpdatesAndUnsetValues = removeOptionalValuesifAbsent(nodeUpdates)
-
   return checkForAdventureInDatabase(adventureId)
     .then(() => {
       return checkIfUserIsAdventureOwner(userId, adventureId)
@@ -372,7 +414,6 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
       res.json(result)
     )
     .catch(err => next(err))
-
 })
 
 
@@ -426,6 +467,7 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
 })
 
 
+
 // DEL an entire adventure
 router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
   const adventureId = req.params.adventureId;
@@ -440,7 +482,7 @@ router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
     .then(adventure => {
       return adventure.nodes.forEach(node => {
         return Node.findByIdAndRemove(node)
-          .then(()=>{
+          .then(() => {
             return;
           })
       })
