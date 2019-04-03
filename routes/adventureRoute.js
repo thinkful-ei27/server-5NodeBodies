@@ -87,14 +87,14 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
 function videoValidate (videoURL){
   let videoID;
 
-  if (videoURL.contains("watch")) {
+  if (videoURL.includes("watch")) {
     let indexOf = videoURL.indexOf('?v=')
     videoID = videoURL.slice(indexOf + 3)
 
-  } else if (videoURL.contains("embed")) {
+  } else if (videoURL.includes("embed")) {
     let indexOf = videoURL.indexOf('embed/')
     videoID = videoURL.slice(indexOf + 6)
-  } else if ((videoURL.contains("youtu.be"))){
+  } else if ((videoURL.includes("youtu.be"))){
     let indexOf = videoURL.indexOf('.be/')
     videoID = videoURL.slice(indexOf + 4)
   }
@@ -110,7 +110,7 @@ function videoValidate (videoURL){
 router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   const userId = req.user.userId;
   const username = req.user.username;
-  const { title,
+  let { title,
     startContent,
     question,
     answerB,
@@ -126,9 +126,12 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     error.status = 400;
     return next(error);
   }
-  videoURL = videoValidate(videoURL)
-  startVideoURL = videoValidate(startVideoURL)
-  
+  if (videoURL) {
+    videoValidate(videoURL)
+  }
+  if (startVideoURL){
+    startVideoURL = videoValidate(startVideoURL)
+  } 
   const headNode = {
     question,
     textContent,

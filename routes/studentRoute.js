@@ -45,7 +45,7 @@ router.get('/search/:searchTerm', (req, res, next) => {
 })
 
 
-router.get('/adventure/:id', (req, res, next) => {
+router.get('/adventure/:id', (req, res, next) => { 
   const adventureId = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `adventureId` is not valid');
@@ -75,7 +75,7 @@ router.get('/adventure/:id', (req, res, next) => {
   })
 })
 
-router.get('/:adventureId/:nodeId', (req, res, next) => {
+router.get('/:adventureId/:nodeId', (req, res, next) => { 
   const adventureId = req.params.adventureId;
   const nodeId = req.params.nodeId;
   // return Adventure.find({_id: adventureId})
