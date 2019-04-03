@@ -17,6 +17,7 @@ const adventureSchema = mongoose.Schema({
   nodes: [
     { type: mongoose.Schema.Types.ObjectId, ref: 'Node' }
   ],
+  count: {type: Number}
 });
 
 // adventure titles must be unique per userId
