@@ -84,6 +84,12 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     })
 })
 
+const videoValidate(videoURL){
+  let videoID;
+
+  return videoID;
+}
+
 //  adventure/newAdventure route creates a new adventure document, head node, and adds the adventure
 // id to the user object.
 router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
