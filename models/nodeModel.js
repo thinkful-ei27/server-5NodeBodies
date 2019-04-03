@@ -18,6 +18,7 @@ const nodeSchema = mongoose.Schema({
   answerD: { type: String },
   pointerD: { type: mongoose.Schema.Types.ObjectId, ref: 'Node' },
   ending: { type: Boolean },
+  count: { type: Number }
 });
 
 
