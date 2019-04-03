@@ -483,5 +483,4 @@ describe('/api/user', function () {
       //     });
       // });
     });
-  });
 });
