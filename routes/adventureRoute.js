@@ -84,7 +84,7 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     })
 })
 
-function videoValidate (videoURL){
+function videoValidate(videoURL) {
   let videoID;
 
   if (videoURL.includes("watch")) {
@@ -94,7 +94,7 @@ function videoValidate (videoURL){
   } else if (videoURL.includes("embed")) {
     let indexOf = videoURL.indexOf('embed/')
     videoID = videoURL.slice(indexOf + 6)
-  } else if ((videoURL.includes("youtu.be"))){
+  } else if ((videoURL.includes("youtu.be"))) {
     let indexOf = videoURL.indexOf('.be/')
     videoID = videoURL.slice(indexOf + 4)
   }
@@ -121,7 +121,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     videoURL,
     textContent,
     password } = req.body;
-    let hasPassword = false;
+  let hasPassword = false;
   if (!title) {
     const error = new Error('Please provide a title for your adventure!');
     error.status = 400;
@@ -131,10 +131,10 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   if (videoURL) {
     videoValidate(videoURL)
   }
-  if (startVideoURL){
+  if (startVideoURL) {
     startVideoURL = videoValidate(startVideoURL)
-
-  if(password){
+  }
+  if (password) {
     hasPassword = true;
   }
   console.log(hasPassword);
@@ -173,7 +173,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
         }
         console.log(adventureObj);
         //If a password exists, we hash it to store the hash instead of plaintext
-        if(password){
+        if (password) {
           return Adventure.hashPassword(password)
             .then(hash => {
               adventureObj.password = hash;
@@ -388,6 +388,11 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
 
   const removeNode = Node.findByIdAndRemove(nodeId);
 
+  const removeIdFromParentsArrays = Node.updateMany(
+    { parents: nodeId },
+    { $pull: { parents: nodeId } }
+  )
+
   const updateAdventure = Adventure.updateOne(
     { nodes: nodeId },
     { $pull: { nodes: nodeId } }
@@ -412,11 +417,13 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
 
   return Promise.all([
     removeNode,
+    removeIdFromParentsArrays,
     updateAdventure,
     updatePointerA,
     updatePointerB,
     updatePointerC,
     updatePointerD])
+
     .then(() => {
       return res.sendStatus(204);
     })
@@ -440,7 +447,7 @@ router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
     .then(adventure => {
       return adventure.nodes.forEach(node => {
         return Node.findByIdAndRemove(node)
-          .then(()=>{
+          .then(() => {
             return;
           })
       })
@@ -453,13 +460,7 @@ router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
     .catch(err => {
       return next(err)
     })
-
-
 })
-
-
-
-
 
 function removeOptionalValuesifAbsent(nodeUpdates) {
 
