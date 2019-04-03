@@ -17,18 +17,26 @@ const adventureSchema = mongoose.Schema({
   nodes: [
     { type: mongoose.Schema.Types.ObjectId, ref: 'Node' }
   ],
-  count: {type: Number}
+  count: {type: Number},
+  hasPassword: { type: Boolean },
+  password: {
+    type: String
+  }
 });
 
 // adventure titles must be unique per userId
 adventureSchema.index({ title: 1, userId: 1 }, { unique: true });
 
+adventureSchema.statics.hashPassword = function (password) {
+  return bcrypt.hash(password, 10);
+};
 
 adventureSchema.set('toJSON', {
   virtuals: true,     // include built-in virtual `id`
   transform: (doc, ret) => {
     delete ret._id; // delete `_id`
     delete ret.__v;
+    delete ret.password;
   }
 })
 
