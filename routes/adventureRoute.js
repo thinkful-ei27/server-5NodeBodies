@@ -264,16 +264,24 @@ router.post('/linkNodes', jwtAuth, jsonParser, (req, res, next) => {
   ])
     .then(() => {
       // update Nodes with links
-      return Promise.all([
-        updatePointerOnParent(parentId, parentInt, childId),
-        Node.findOneAndUpdate(
-          { _id: childId },
-          { parents: [...parents, parentId] })
-      ])
+      return updatePointerOnParent(parentId, parentInt, childId)
     })
     .then(() => {
-      res.sendStatus(204).end()
+      return Node.findOne({ _id: childId })
     })
+    .then((childNode) => {
+      const parents = childNode.parents;
+      console.log(parents)
+      return Node.findOneAndUpdate({ _id: childId },
+        { parents: [...parents, parentId] }, { new: true })
+    })
+    .then(() => {
+
+      return res.status(204).end()
+    })
+    .catch(
+      err => next(err)
+    )
 
 })
 
