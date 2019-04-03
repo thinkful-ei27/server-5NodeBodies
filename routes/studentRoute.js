@@ -57,7 +57,24 @@ router.get('/adventure/:id', (req, res, next) => {
     if(adventure.length === 0){
       return Promise.reject(new Error('Adventure not found'));
     }
-  return res.json(adventure);
+    let adventureId = req.params.id;
+    if (adventure.count) {
+      return Adventure.findByIdAndUpdate(adventureId, {count : (adventure.count + 1)})
+    } else {
+      return Adventure.findByIdAndUpdate(adventureId, {count :  1})
+    }
+    })
+    .then(node => {
+      console.log(node)
+      res.json(node)
+    })
+    .catch(err => {
+      if(err.message === 'Adventure not found'){
+        err.status = 404;
+      }
+      next(err);
+    })
+  })
   // in case we want to return the // first node
   //   return adventure[0].head
   // })
@@ -66,14 +83,6 @@ router.get('/adventure/:id', (req, res, next) => {
   // })
   // .then(node => {
   //   res.json(node)
-   })
-  .catch(err => {
-    if(err.message === 'Adventure not found'){
-      err.status = 404;
-    }
-    next(err);
-  })
-})
 
 router.get('/:adventureId/:nodeId', (req, res, next) => { 
   const adventureId = req.params.adventureId;
@@ -101,7 +110,18 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     if (node.length === 0){
       return Promise.reject(new Error ('Node not found'))
     }
-    res.json(node)
+    console.log(node)
+    let nodeId = req.params.nodeId;
+    console.log(nodeId)
+    if (node.count) {
+      return Node.findByIdAndUpdate(nodeId, {count : (node.count + 1)})
+    } else {
+      return Node.findByIdAndUpdate(nodeId, {count :  1})
+    }
+   })
+   .then(node => {
+     console.log(node)
+     res.json(node)
    })
   .catch(err => {
     if(err.message === 'Node not found'){
