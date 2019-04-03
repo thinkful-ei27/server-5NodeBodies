@@ -98,13 +98,24 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     answerC,
     answerD,
     videoURL,
-    textContent } = req.body;
+    textContent,
+    hasPassword,
+    password } = req.body;
 
   if (!title) {
-    const error = new Error('Please provide a title for your adventure!')
+    const error = new Error('Please provide a title for your adventure!');
     error.status = 400;
     return next(error);
   }
+
+  if (hasPassword && !password){
+    //I don't like this error message
+    const error = new Error('Please provide a password for your adventure');
+    error.status = 400;
+    return next(error);
+  }
+
+  
 
   const headNode = {
     question,
@@ -124,7 +135,9 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   return createNewNode(headNode)
     .then((_res) => {
       if (_res) {
+
         const nodeId = _res.id
+        //somehow we have to hash the password and store it in the adventureObj
         const adventureObj = {
           title,
           startContent,
@@ -132,9 +145,20 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
           head: nodeId,
           nodes: [nodeId],
           creator: username,
-          creatorId: userId
+          creatorId: userId,
+          hasPassword
         }
-        return Adventure.create(adventureObj)
+        console.log(adventureObj);
+        if(hasPassword){
+          return Adventure.hashPassword(password)
+            .then(hash => {
+              adventureObj.password = hash;
+              console.log(adventureObj);
+              return Adventure.create(adventureObj);
+            })
+        } else {
+          return Adventure.create(adventureObj)
+        }
       } else next();
     })
     .then((_res) => {
