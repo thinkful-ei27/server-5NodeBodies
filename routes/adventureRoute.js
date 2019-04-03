@@ -84,12 +84,33 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     })
 })
 
+function videoValidate (videoURL){
+  let videoID;
+
+  if (videoURL.includes("watch")) {
+    let indexOf = videoURL.indexOf('?v=')
+    videoID = videoURL.slice(indexOf + 3)
+
+  } else if (videoURL.includes("embed")) {
+    let indexOf = videoURL.indexOf('embed/')
+    videoID = videoURL.slice(indexOf + 6)
+  } else if ((videoURL.includes("youtu.be"))){
+    let indexOf = videoURL.indexOf('.be/')
+    videoID = videoURL.slice(indexOf + 4)
+  }
+
+  let outputString = `https://www.youtube.com/embed/${videoID}`
+
+
+  return outputString
+}
+
 //  adventure/newAdventure route creates a new adventure document, head node, and adds the adventure
 // id to the user object.
 router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   const userId = req.user.userId;
   const username = req.user.username;
-  const { title,
+  let { title,
     startContent,
     question,
     answerB,
@@ -106,10 +127,18 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     error.status = 400;
     return next(error);
   }
+
+  if (videoURL) {
+    videoValidate(videoURL)
+  }
+  if (startVideoURL){
+    startVideoURL = videoValidate(startVideoURL)
+
   if(password){
     hasPassword = true;
   }
   console.log(hasPassword);
+
 
   const headNode = {
     question,
