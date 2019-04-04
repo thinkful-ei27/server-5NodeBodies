@@ -112,14 +112,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   const username = req.user.username;
   let { title,
     startContent,
-    question,
-    answerB,
     startVideoURL,
-    answerA,
-    answerC,
-    answerD,
-    videoURL,
-    textContent,
     password } = req.body;
   let hasPassword = false;
   if (!title) {
@@ -128,34 +121,67 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     return next(error);
   }
 
-  if (videoURL) {
-    videoValidate(videoURL)
-  }
   if (startVideoURL) {
     startVideoURL = videoValidate(startVideoURL)
   }
   if (password) {
     hasPassword = true;
   }
-  console.log(hasPassword);
 
-
-  const headNode = {
-    question,
-    textContent,
-    videoURL,
-    answerB,
-    answerA,
-    answerC,
-    answerD,
-    parents: null,
-    ending: false
-    //  is this above ending to conditionally change what the ending is??
-  }
+  //adventureArray in accessible scope for user update
+  let adventureArray = [];
   // create adventureId variable in accessible scope
   let adventureId;
-  let adventure
-  return createNewNode(headNode)
+  let adventureObj = {
+    title,
+    startContent,
+    startVideoURL,
+    hasPassword,
+    count: 0,
+    creatorId: userId,
+    creator: username
+  }
+
+  return User.findOne({_id: userId})
+    .then(_res => {
+      //we grab the users current list of adventures and store for later
+      adventureArray = _res.adventures
+      console.log(adventureArray);
+      if (password) {
+        //adventures with password route
+        return Adventure.hashPassword(password)
+          .then(hash => {
+            //after hasing the password, we store the hashed password as part of the adv obj
+            adventureObj.password = hash;
+            return Adventure.create(adventureObj);
+          })
+      } else {
+        //Adventures with no password route
+        return Adventure.create(adventureObj)
+    }
+  }).then(adventure => {
+    console.log('adventure is... ', adventure)
+    adventureId = adventure._id;
+    return User.findOneAndUpdate({_id: userId}, {adventures: [...adventureArray, adventureId]})
+  }).then(_res => {
+    console.log('_res after findOneAndUpdate is...', _res);
+    return Adventure.findById(adventureId).populate('nodes').populate('head')
+  }).then(result => {
+    console.log('result is... ', result);
+    return res.json(result);
+  }).catch(err => {
+    if (err.code === 11000) {
+      err = new Error('You already have an Adventure with this title. Pick a unique title!');
+      err.status = 400;
+    }
+    next(err);
+  })
+    
+
+  
+})
+
+/*return createNewNode(headNode)
     .then((_res) => {
       if (_res) {
 
@@ -211,11 +237,11 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
         err.status = 400;
       }
       next(err);
-    });
-})
+    });*/
 
 // TODO change this route to include adventureID in url
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
+  let hasHead;
   const userId = req.user.id;
   const {
     title,
@@ -230,15 +256,17 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     videoURL,
     textContent,
     ending } = req.body;
-
+    console.log(adventureId)
+    
   // check if parent id is a valid id
-  if (!mongoose.Types.ObjectId.isValid(parentId)) {
-    const err = new Error('The `parentId` is not valid');
-    err.status = 400;
-    return next(err);
-  }
+  // if (!mongoose.Types.ObjectId.isValid(parentId) && !checkAdventureForHeadNode(adventureId)) { //David removed this becuase, IF it is a head node it WON'T have a parent and the boolean wouldn't play nice
+  //   const err = new Error('The `parentId` is not valid');
+  //   err.status = 400;
+  //   return next(err);
+  // }
 
   // checks if  adventure Id is a valid id
+  console.log(adventureId)
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `adventureId` is not valid');
     err.status = 400;
@@ -263,8 +291,9 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   let createdNode;
 
   return checkForAdventureInDatabase(adventureId)
-    .then(() => {
-      return checkForParentInDatabase(parentId)
+    .then((adventure) => {
+      hasHead = checkAdventureForHeadNode(adventure)
+      return hasHead// return checkForParentInDatabase(parentId) //David removed this due the reasons above
     })
     .then(() => {
       return checkIfUserIsAdventureOwner(userId, adventureId)
@@ -289,7 +318,15 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     .then((_res) => {
       createdNode = _res;
       const nodeId = createdNode.id;
-      return updatePointerOnParent(parentId, parentInt, nodeId);
+      if (!hasHead) {
+        return Adventure.findOneAndUpdate({ _id: adventureId }, {head: _res})
+        .then((_res) => {
+          return updatePointerOnParent(parentId, parentInt, nodeId);
+        })
+      } else {
+        return updatePointerOnParent(parentId, parentInt, nodeId);
+      }
+
     })
     .then(() => {
       const nodeId = createdNode.id;
@@ -590,7 +627,7 @@ function updatePointerOnParent(parentId, parentInt, nodeId) {
 }
 
 // added NEW created node to adventure
-function addCreatedNodeToAdventure(adventureId, nodeId) {
+function addCreatedNodeToAdventure(adventureId, nodeId, hasHead) {
   return Adventure.findOneAndUpdate(
     { _id: adventureId },
     { $push: { nodes: nodeId } }
@@ -611,8 +648,19 @@ function checkForAdventureInDatabase(adventureId) {
         err.status = 400
         console.log(err)
         throw err
-      } else return;
+      } else return adventure
     });
+}
+
+function checkAdventureForHeadNode(adventureId) {
+  return Adventure.findOne({ _id: adventureId })
+  .then( (adventure) => {
+    if (!adventure.head) {
+      return true
+    } else {
+      return false
+    }
+    })
 }
 
 // checks for parent in database
