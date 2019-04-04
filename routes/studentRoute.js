@@ -18,6 +18,7 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 
 router.get('/search', (req, res, next) => {
+  //It would be good to limit the data that comes back as this is a catch all
   return Adventure.find()
     .then(adventures => {
       return res.json(adventures)
@@ -28,6 +29,7 @@ router.get('/search', (req, res, next) => {
 });
 
 router.get('/search/:searchTerm', (req, res, next) => {
+  //It would be good to limit the data that comes back as this is just a search
   let searchTerm = req.params.searchTerm;
   return Adventure.find({title: {$regex: searchTerm}})
     .then(adventures => {
