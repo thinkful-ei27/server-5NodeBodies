@@ -144,11 +144,14 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 
   return User.findOne({_id: userId})
     .then(_res => {
+      //we grab the users current list of adventures and store for later
       adventureArray = _res.adventures
       console.log(adventureArray);
       if (password) {
+        //adventures with password route
         return Adventure.hashPassword(password)
           .then(hash => {
+            //after hasing the password, we store the hashed password as part of the adv obj
             adventureObj.password = hash;
             return Adventure.create(adventureObj);
           })

@@ -30,6 +30,11 @@ adventureSchema.index({ title: 1, userId: 1 }, { unique: true });
 adventureSchema.statics.hashPassword = function (password) {
   return bcrypt.hash(password, 10);
 };
+ 
+adventureSchema.methods.validatePassword = function (password) {
+  return bcrypt.compare(password, this.password);
+};
+
 
 adventureSchema.set('toJSON', {
   virtuals: true,     // include built-in virtual `id`
