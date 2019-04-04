@@ -292,8 +292,15 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
 
   return checkForAdventureInDatabase(adventureId)
     .then((adventure) => {
-      hasHead = checkAdventureForHeadNode(adventure)
-      return hasHead// return checkForParentInDatabase(parentId) //David removed this due the reasons above
+        return Adventure.findOne({ _id: adventureId })
+      .then( (adventure) => {
+        console.log("check for adventure: ", adventure)
+        if (adventure.head) {
+          hasHead = true
+        } else {
+          hasHead = false
+        }
+        })
     })
     .then(() => {
       return checkIfUserIsAdventureOwner(userId, adventureId)
@@ -318,6 +325,7 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     .then((_res) => {
       createdNode = _res;
       const nodeId = createdNode.id;
+      console.log("has head is: ", hasHead)
       if (!hasHead) {
         return Adventure.findOneAndUpdate({ _id: adventureId }, {head: _res})
         .then((_res) => {
@@ -655,7 +663,8 @@ function checkForAdventureInDatabase(adventureId) {
 function checkAdventureForHeadNode(adventureId) {
   return Adventure.findOne({ _id: adventureId })
   .then( (adventure) => {
-    if (!adventure.head) {
+    console.log("check for adventure: ", adventure)
+    if (adventure.head) {
       return true
     } else {
       return false
