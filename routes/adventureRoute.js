@@ -87,14 +87,14 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
 function videoValidate (videoURL){
   let videoID;
 
-  if (videoURL.contains("watch")) {
+  if (videoURL.includes("watch")) {
     let indexOf = videoURL.indexOf('?v=')
     videoID = videoURL.slice(indexOf + 3)
 
-  } else if (videoURL.contains("embed")) {
+  } else if (videoURL.includes("embed")) {
     let indexOf = videoURL.indexOf('embed/')
     videoID = videoURL.slice(indexOf + 6)
-  } else if ((videoURL.contains("youtu.be"))){
+  } else if ((videoURL.includes("youtu.be"))){
     let indexOf = videoURL.indexOf('.be/')
     videoID = videoURL.slice(indexOf + 4)
   }
@@ -110,7 +110,7 @@ function videoValidate (videoURL){
 router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   const userId = req.user.userId;
   const username = req.user.username;
-  const { title,
+  let { title,
     startContent,
     question,
     answerB,
@@ -119,16 +119,27 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     answerC,
     answerD,
     videoURL,
-    textContent } = req.body;
-
+    textContent,
+    password } = req.body;
+    let hasPassword = false;
   if (!title) {
-    const error = new Error('Please provide a title for your adventure!')
+    const error = new Error('Please provide a title for your adventure!');
     error.status = 400;
     return next(error);
   }
-  videoURL = videoValidate(videoURL)
-  startVideoURL = videoValidate(startVideoURL)
-  
+
+  if (videoURL) {
+    videoValidate(videoURL)
+  }
+  if (startVideoURL){
+    startVideoURL = videoValidate(startVideoURL)
+
+  if(password){
+    hasPassword = true;
+  }
+  console.log(hasPassword);
+
+
   const headNode = {
     question,
     textContent,
@@ -147,7 +158,9 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   return createNewNode(headNode)
     .then((_res) => {
       if (_res) {
+
         const nodeId = _res.id
+        //somehow we have to hash the password and store it in the adventureObj
         const adventureObj = {
           title,
           startContent,
@@ -155,9 +168,21 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
           head: nodeId,
           nodes: [nodeId],
           creator: username,
-          creatorId: userId
+          creatorId: userId,
+          hasPassword
         }
-        return Adventure.create(adventureObj)
+        console.log(adventureObj);
+        //If a password exists, we hash it to store the hash instead of plaintext
+        if(password){
+          return Adventure.hashPassword(password)
+            .then(hash => {
+              adventureObj.password = hash;
+              return Adventure.create(adventureObj);
+            })
+        } else {
+          //Adventures with no password route
+          return Adventure.create(adventureObj)
+        }
       } else next();
     })
     .then((_res) => {
