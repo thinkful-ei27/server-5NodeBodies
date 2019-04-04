@@ -218,6 +218,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   const userId = req.user.id;
   const {
+    title,
     adventureId,
     parentId, // id
     parentInt, //int
@@ -244,6 +245,21 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     return next(err);
   }
 
+  if (!ending && (!question || question === '')) {
+    const err = new Error('You must ask a question');
+    err.status = 400;
+    return next(err);
+  }
+
+  // TODO: impliment once titles are success on front end
+
+
+  // if (!title || title === '') {
+  //   const err = new Error('Please provide a title, It will help for adventure build navigation');
+  //   err.status = 400;
+  //   return next(err);
+  // }
+
   let createdNode;
 
   return checkForAdventureInDatabase(adventureId)
@@ -256,6 +272,7 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     .then(() => {
       // create the node
       const nodeToCreate = {
+        title,
         parents: [parentId],
         question,
         answerB,
@@ -346,6 +363,7 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
 
   // TODO, update route for ending nodes. 
   const updateableFields = [
+    'title',
     'parents',
     'question',
     'answerA',
@@ -372,6 +390,11 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
   }
   if (!mongoose.Types.ObjectId.isValid(nodeId)) {
     const err = new Error('The `nodeId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  if (nodeUpdates.title === '') {
+    const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);
   }
@@ -481,7 +504,7 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
       }
     })
     .then(() => {
-      return res.sendStatus(204);
+      return res.status(204).end();
     })
     .catch(err => {
       return next(err);
