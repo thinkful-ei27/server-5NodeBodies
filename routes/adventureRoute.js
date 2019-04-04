@@ -420,6 +420,7 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
 // DEL a single node.
 router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
   const nodeId = req.params.nodeId;
+  const adventureId = req.params.adventureId;
 
   if (!mongoose.Types.ObjectId.isValid(nodeId)) {
     const err = new Error('The `id` is not valid');
@@ -427,44 +428,58 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
     return next(err);
   }
 
-  const removeNode = Node.findByIdAndRemove(nodeId);
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  Adventure.findById(adventureId)
+    .then((adventure) => {
 
-  const removeIdFromParentsArrays = Node.updateMany(
-    { parents: nodeId },
-    { $pull: { parents: nodeId } }
-  )
+      if (adventure.head.equals(nodeId)) {
+        const err = new Error('You cannot remove the Starting question. Try editing it instead')
+        err.status = 400;
+        return next(err);
+      }
+      else {
+        const removeNode = Node.findByIdAndRemove(nodeId);
+        const removeIdFromParentsArrays = Node.updateMany(
+          { parents: nodeId },
+          { $pull: { parents: nodeId } }
+        )
 
-  const updateAdventure = Adventure.updateOne(
-    { nodes: nodeId },
-    { $pull: { nodes: nodeId } }
-  );
+        const updateAdventure = Adventure.updateOne(
+          { nodes: nodeId },
+          { $pull: { nodes: nodeId } }
+        );
 
-  const updatePointerA = Node.updateMany(
-    { pointerA: nodeId },
-    { $unset: { pointerA: nodeId } }
-  )
-  const updatePointerB = Node.updateMany(
-    { pointerB: nodeId },
-    { $unset: { pointerB: nodeId } }
-  )
-  const updatePointerC = Node.updateMany(
-    { pointerC: nodeId },
-    { $unset: { pointerC: nodeId } }
-  )
-  const updatePointerD = Node.updateMany(
-    { pointerD: nodeId },
-    { $unset: { pointerD: nodeId } }
-  )
+        const updatePointerA = Node.updateMany(
+          { pointerA: nodeId },
+          { $unset: { pointerA: nodeId } }
+        )
+        const updatePointerB = Node.updateMany(
+          { pointerB: nodeId },
+          { $unset: { pointerB: nodeId } }
+        )
+        const updatePointerC = Node.updateMany(
+          { pointerC: nodeId },
+          { $unset: { pointerC: nodeId } }
+        )
+        const updatePointerD = Node.updateMany(
+          { pointerD: nodeId },
+          { $unset: { pointerD: nodeId } }
+        )
 
-  return Promise.all([
-    removeNode,
-    removeIdFromParentsArrays,
-    updateAdventure,
-    updatePointerA,
-    updatePointerB,
-    updatePointerC,
-    updatePointerD])
-
+        return Promise.all([
+          removeNode,
+          removeIdFromParentsArrays,
+          updateAdventure,
+          updatePointerA,
+          updatePointerB,
+          updatePointerC,
+          updatePointerD])
+      }
+    })
     .then(() => {
       return res.sendStatus(204);
     })
