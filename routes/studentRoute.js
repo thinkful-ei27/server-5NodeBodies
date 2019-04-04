@@ -66,6 +66,12 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
     }
     if(adventure.hasPassword){
       console.log('Comparing passwords... user submission is:', password);
+      if (password === undefined){
+        return Promise.reject({
+          reason: 'PasswordError',
+          message: 'This LearnVenture requires a password'
+        })
+      }
       return adventure.validatePassword(password)
         .then(isValid => {
           if(!isValid){
@@ -97,6 +103,9 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
         err.status = 404;
       }
       if(err.message === 'Incorrect Password'){
+        err.status = 401;
+      }
+      if(err.message === 'This LearnVenture requires a password'){
         err.status = 401;
       }
       next(err);
