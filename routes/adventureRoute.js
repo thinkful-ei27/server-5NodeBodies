@@ -161,11 +161,11 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     }
   }).then(adventure => {
     console.log('adventure is... ', adventure)
-    const newAdventure = adventure._id;
-    return User.findOneAndUpdate({_id: userId}, {adventures: [...adventureArray, newAdventure]})
+    adventureId = adventure._id;
+    return User.findOneAndUpdate({_id: userId}, {adventures: [...adventureArray, adventureId]})
   }).then(_res => {
     console.log('_res after findOneAndUpdate is...', _res);
-    return Adventure.findOne({ _id: adventureId }).populate('nodes').populate('head')
+    return Adventure.findById(adventureId).populate('nodes').populate('head')
   }).then(result => {
     console.log('result is... ', result);
     return res.json(result);
@@ -241,8 +241,10 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 
 // TODO change this route to include adventureID in url
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
+  let hasHead;
   const userId = req.user.id;
-  const {
+  console.log(req.body)
+  let {
     adventureId,
     parentId, // id
     parentInt, //int
@@ -254,15 +256,17 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     videoURL,
     textContent,
     ending } = req.body;
-
+    console.log(adventureId)
+    
   // check if parent id is a valid id
-  if (!mongoose.Types.ObjectId.isValid(parentId)) {
-    const err = new Error('The `parentId` is not valid');
-    err.status = 400;
-    return next(err);
-  }
+  // if (!mongoose.Types.ObjectId.isValid(parentId) && !checkAdventureForHeadNode(adventureId)) { //David removed this becuase, IF it is a head node it WON'T have a parent and the boolean wouldn't play nice
+  //   const err = new Error('The `parentId` is not valid');
+  //   err.status = 400;
+  //   return next(err);
+  // }
 
   // checks if  adventure Id is a valid id
+  console.log(adventureId)
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `adventureId` is not valid');
     err.status = 400;
@@ -272,8 +276,9 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   let createdNode;
 
   return checkForAdventureInDatabase(adventureId)
-    .then(() => {
-      return checkForParentInDatabase(parentId)
+    .then((adventure) => {
+      hasHead = checkAdventureForHeadNode(adventure)
+      return hasHead// return checkForParentInDatabase(parentId) //David removed this due the reasons above
     })
     .then(() => {
       return checkIfUserIsAdventureOwner(userId, adventureId)
@@ -297,7 +302,15 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     .then((_res) => {
       createdNode = _res;
       const nodeId = createdNode.id;
-      return updatePointerOnParent(parentId, parentInt, nodeId);
+      if (!hasHead) {
+        return Adventure.findOneAndUpdate({ _id: adventureId }, {head: _res})
+        .then((_res) => {
+          return updatePointerOnParent(parentId, parentInt, nodeId);
+        })
+      } else {
+        return updatePointerOnParent(parentId, parentInt, nodeId);
+      }
+
     })
     .then(() => {
       const nodeId = createdNode.id;
@@ -577,7 +590,7 @@ function updatePointerOnParent(parentId, parentInt, nodeId) {
 }
 
 // added NEW created node to adventure
-function addCreatedNodeToAdventure(adventureId, nodeId) {
+function addCreatedNodeToAdventure(adventureId, nodeId, hasHead) {
   return Adventure.findOneAndUpdate(
     { _id: adventureId },
     { $push: { nodes: nodeId } }
@@ -598,8 +611,19 @@ function checkForAdventureInDatabase(adventureId) {
         err.status = 400
         console.log(err)
         throw err
-      } else return;
+      } else return adventure
     });
+}
+
+function checkAdventureForHeadNode(adventureId) {
+  return Adventure.findOne({ _id: adventureId })
+  .then( (adventure) => {
+    if (!adventure.head) {
+      return true
+    } else {
+      return false
+    }
+    })
 }
 
 // checks for parent in database
