@@ -112,14 +112,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   const username = req.user.username;
   let { title,
     startContent,
-    question,
-    answerB,
     startVideoURL,
-    answerA,
-    answerC,
-    answerD,
-    videoURL,
-    textContent,
     password } = req.body;
   let hasPassword = false;
   if (!title) {
@@ -128,34 +121,64 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     return next(error);
   }
 
-  if (videoURL) {
-    videoValidate(videoURL)
-  }
   if (startVideoURL) {
     startVideoURL = videoValidate(startVideoURL)
   }
   if (password) {
     hasPassword = true;
   }
-  console.log(hasPassword);
 
-
-  const headNode = {
-    question,
-    textContent,
-    videoURL,
-    answerB,
-    answerA,
-    answerC,
-    answerD,
-    parents: null,
-    ending: false
-    //  is this above ending to conditionally change what the ending is??
-  }
+  //adventureArray in accessible scope for user update
+  let adventureArray = [];
   // create adventureId variable in accessible scope
   let adventureId;
-  let adventure
-  return createNewNode(headNode)
+  let adventureObj = {
+    title,
+    startContent,
+    startVideoURL,
+    hasPassword,
+    count: 0,
+    creatorId: userId,
+    creator: username
+  }
+
+  return User.findOne({_id: userId})
+    .then(_res => {
+      adventureArray = _res.adventures
+      console.log(adventureArray);
+      if (password) {
+        return Adventure.hashPassword(password)
+          .then(hash => {
+            adventureObj.password = hash;
+            return Adventure.create(adventureObj);
+          })
+      } else {
+        //Adventures with no password route
+        return Adventure.create(adventureObj)
+    }
+  }).then(adventure => {
+    console.log('adventure is... ', adventure)
+    const newAdventure = adventure._id;
+    return User.findOneAndUpdate({_id: userId}, {adventures: [...adventureArray, newAdventure]})
+  }).then(_res => {
+    console.log('_res after findOneAndUpdate is...', _res);
+    return Adventure.findOne({ _id: adventureId }).populate('nodes').populate('head')
+  }).then(result => {
+    console.log('result is... ', result);
+    return res.json(result);
+  }).catch(err => {
+    if (err.code === 11000) {
+      err = new Error('You already have an Adventure with this title. Pick a unique title!');
+      err.status = 400;
+    }
+    next(err);
+  })
+    
+
+  
+})
+
+/*return createNewNode(headNode)
     .then((_res) => {
       if (_res) {
 
@@ -211,8 +234,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
         err.status = 400;
       }
       next(err);
-    });
-})
+    });*/
 
 // TODO change this route to include adventureID in url
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
