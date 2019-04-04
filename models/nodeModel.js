@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 const nodeSchema = mongoose.Schema({
-
+  title: { type: String },
   question: { type: String },
   videoURL: { type: String },
   textContent: { type: String },
@@ -20,6 +20,10 @@ const nodeSchema = mongoose.Schema({
   ending: { type: Boolean },
   count: { type: Number }
 });
+
+// node titles must be unique per adventureId
+// should compare against title before creating nodes actually
+// nodeSchema.index({ title: 1, adventureId: 1 }, { unique: true });
 
 
 nodeSchema.set('toJSON', {
