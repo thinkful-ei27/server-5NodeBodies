@@ -84,7 +84,7 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     })
 })
 
-function videoValidate (videoURL){
+function videoValidate(videoURL) {
   let videoID;
 
   if (videoURL.includes("watch")) {
@@ -94,7 +94,7 @@ function videoValidate (videoURL){
   } else if (videoURL.includes("embed")) {
     let indexOf = videoURL.indexOf('embed/')
     videoID = videoURL.slice(indexOf + 6)
-  } else if ((videoURL.includes("youtu.be"))){
+  } else if ((videoURL.includes("youtu.be"))) {
     let indexOf = videoURL.indexOf('.be/')
     videoID = videoURL.slice(indexOf + 4)
   }
@@ -121,7 +121,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     videoURL,
     textContent,
     password } = req.body;
-    let hasPassword = false;
+  let hasPassword = false;
   if (!title) {
     const error = new Error('Please provide a title for your adventure!');
     error.status = 400;
@@ -131,10 +131,10 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
   if (videoURL) {
     videoValidate(videoURL)
   }
-  if (startVideoURL){
+  if (startVideoURL) {
     startVideoURL = videoValidate(startVideoURL)
-
-  if(password){
+  }
+  if (password) {
     hasPassword = true;
   }
   console.log(hasPassword);
@@ -173,7 +173,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
         }
         console.log(adventureObj);
         //If a password exists, we hash it to store the hash instead of plaintext
-        if(password){
+        if (password) {
           return Adventure.hashPassword(password)
             .then(hash => {
               adventureObj.password = hash;
@@ -290,17 +290,61 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     });
 })
 
+router.post('/linkNodes', jwtAuth, jsonParser, (req, res, next) => {
+  const userId = req.user.id;
+  const { adventureId, parentId, childId, parentInt } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(parentId) || !mongoose.Types.ObjectId.isValid(childId)) {
+    const err = new Error('The `nodeId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  // validate all the ids
+  return Promise.all([
+    checkForAdventureInDatabase(adventureId),
+    checkForParentInDatabase(parentId),
+    checkForParentInDatabase(childId),
+    checkIfUserIsAdventureOwner(userId, adventureId),
+  ])
+    .then(() => {
+      // update Nodes with links
+      return updatePointerOnParent(parentId, parentInt, childId)
+    })
+    .then(() => {
+      return Node.findOne({ _id: childId })
+    })
+    .then((childNode) => {
+      const parents = childNode.parents;
+      console.log(parents)
+      return Node.findOneAndUpdate({ _id: childId },
+        { parents: [...parents, parentId] }, { new: true })
+    })
+    .then(() => {
+
+      return res.status(204).end()
+    })
+    .catch(
+      err => next(err)
+    )
+
+})
+
 router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
   const adventureId = req.params.adventureId;
   const nodeId = req.params.nodeId;
   const userId = req.user.id;
+
   const {
     parentInt, //int
   } = req.body;
 
   // TODO, update route for ending nodes. 
-  // TODO update route for multiple parents
-
   const updateableFields = [
     'parents',
     'question',
@@ -357,10 +401,8 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
         });
     });
   }
-
   // remove optional values if not provided
   const nodeUpdatesAndUnsetValues = removeOptionalValuesifAbsent(nodeUpdates)
-
   return checkForAdventureInDatabase(adventureId)
     .then(() => {
       return checkIfUserIsAdventureOwner(userId, adventureId)
@@ -372,7 +414,6 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
       res.json(result)
     )
     .catch(err => next(err))
-
 })
 
 
@@ -387,6 +428,11 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
   }
 
   const removeNode = Node.findByIdAndRemove(nodeId);
+
+  const removeIdFromParentsArrays = Node.updateMany(
+    { parents: nodeId },
+    { $pull: { parents: nodeId } }
+  )
 
   const updateAdventure = Adventure.updateOne(
     { nodes: nodeId },
@@ -412,11 +458,13 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
 
   return Promise.all([
     removeNode,
+    removeIdFromParentsArrays,
     updateAdventure,
     updatePointerA,
     updatePointerB,
     updatePointerC,
     updatePointerD])
+
     .then(() => {
       return res.sendStatus(204);
     })
@@ -424,6 +472,7 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
       return next(err);
     });
 })
+
 
 
 // DEL an entire adventure
@@ -440,7 +489,7 @@ router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
     .then(adventure => {
       return adventure.nodes.forEach(node => {
         return Node.findByIdAndRemove(node)
-          .then(()=>{
+          .then(() => {
             return;
           })
       })
@@ -453,13 +502,7 @@ router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
     .catch(err => {
       return next(err)
     })
-
-
 })
-
-
-
-
 
 function removeOptionalValuesifAbsent(nodeUpdates) {
 

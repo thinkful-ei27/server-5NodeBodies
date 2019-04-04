@@ -17,6 +17,7 @@ const adventureSchema = mongoose.Schema({
   nodes: [
     { type: mongoose.Schema.Types.ObjectId, ref: 'Node' }
   ],
+  count: {type: Number},
   hasPassword: { type: Boolean },
   password: {
     type: String
