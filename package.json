@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "start": "node server.js",
     "test": "mocha --exit",
-    "cover": "nyc --reporter=lcov --reporter=text-summary npm test"
+    "cover": "nyc --reporter=lcov --reporter=text-summary npm test",
+    "nodemon": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
