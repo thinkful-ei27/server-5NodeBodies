@@ -441,18 +441,17 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  if (nodeUpdates.question === '') {
-    const err = new Error('Missing `question` in request body');
-    err.status = 400;
-    return next(err);
-  }
-  if (nodeUpdates.answerA === '' || !nodeUpdates.answerA) {
-    const err = new Error('Must provide at least one answer. `answerA` in request body');
-    err.status = 400;
-    return next(err);
-  }
-  if (!nodeUpdates.ending) {
-    nodeUpdates.ending = false;
+  if (nodeUpdates.ending === false) {
+    if (nodeUpdates.question === '') {
+      const err = new Error('Missing `question` in request body');
+      err.status = 400;
+      return next(err);
+    }
+    if (nodeUpdates.answerA === '' || !nodeUpdates.answerA) {
+      const err = new Error('Must provide at least one answer. `answerA` in request body');
+      err.status = 400;
+      return next(err);
+    }
   }
 
   if (nodeUpdates.parents) {
@@ -467,9 +466,22 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
         });
     });
   }
-  // remove optional values if not provided
-  const nodeUpdatesAndUnsetValues = removeOptionalValuesifAbsent(nodeUpdates)
-  return checkForAdventureInDatabase(adventureId)
+
+  // define this variable for later use
+  let nodeUpdatesAndUnsetValues;
+
+  return Node.findById(nodeId)
+    .then((node) => {
+      // toggling ending boolean causes unforseen problems, turn this ability off for now.
+      if (nodeUpdates.ending !== node.ending) {
+        const err = new Error('You cannot change node types between ending and non-ending')
+        err.status = 400;
+        return next(err)
+      }
+      // remove optional values if not provided
+      nodeUpdatesAndUnsetValues = removeOptionalValuesifAbsent(nodeUpdates)
+      return checkForAdventureInDatabase(adventureId)
+    })
     .then(() => {
       return checkIfUserIsAdventureOwner(userId, adventureId)
     })
