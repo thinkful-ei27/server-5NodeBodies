@@ -12,7 +12,6 @@ const mongoose = require('mongoose');
 
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
-
 //fullroute: '{BASE_URL}/api/adventure'
 
 //This is a get ALL route: Finds all adventures created by the teacher
@@ -54,7 +53,6 @@ router.get('/:id', jwtAuth, (req, res, next) => {
       return next(err);
     })
 })
-
 
 router.get('/:adventureId/:nodeId', (req, res, next) => {
   const adventureId = req.params.adventureId;
@@ -142,7 +140,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     creator: username
   }
 
-  return User.findOne({_id: userId})
+  return User.findOne({ _id: userId })
     .then(_res => {
       //we grab the users current list of adventures and store for later
       adventureArray = _res.adventures
@@ -151,34 +149,34 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
         //adventures with password route
         return Adventure.hashPassword(password)
           .then(hash => {
-            //after hasing the password, we store the hashed password as part of the adv obj
+            //after hashing the password, we store the hashed password as part of the adv obj
             adventureObj.password = hash;
             return Adventure.create(adventureObj);
           })
       } else {
         //Adventures with no password route
         return Adventure.create(adventureObj)
-    }
-  }).then(adventure => {
-    console.log('adventure is... ', adventure)
-    adventureId = adventure._id;
-    return User.findOneAndUpdate({_id: userId}, {adventures: [...adventureArray, adventureId]})
-  }).then(_res => {
-    console.log('_res after findOneAndUpdate is...', _res);
-    return Adventure.findById(adventureId).populate('nodes').populate('head')
-  }).then(result => {
-    console.log('result is... ', result);
-    return res.json(result);
-  }).catch(err => {
-    if (err.code === 11000) {
-      err = new Error('You already have an Adventure with this title. Pick a unique title!');
-      err.status = 400;
-    }
-    next(err);
-  })
-    
+      }
+    }).then(adventure => {
+      console.log('adventure is... ', adventure)
+      adventureId = adventure._id;
+      return User.findOneAndUpdate({ _id: userId }, { adventures: [...adventureArray, adventureId] })
+    }).then(_res => {
+      console.log('_res after findOneAndUpdate is...', _res);
+      return Adventure.findById(adventureId).populate('nodes').populate('head')
+    }).then(result => {
+      console.log('result is... ', result);
+      return res.json(result);
+    }).catch(err => {
+      if (err.code === 11000) {
+        err = new Error('You already have an Adventure with this title. Pick a unique title!');
+        err.status = 400;
+      }
+      next(err);
+    })
 
-  
+
+
 })
 
 /*return createNewNode(headNode)
@@ -256,8 +254,8 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     videoURL,
     textContent,
     ending } = req.body;
-    console.log(adventureId)
-    
+  console.log(adventureId)
+
   // check if parent id is a valid id
   // if (!mongoose.Types.ObjectId.isValid(parentId) && !checkAdventureForHeadNode(adventureId)) { //David removed this becuase, IF it is a head node it WON'T have a parent and the boolean wouldn't play nice
   //   const err = new Error('The `parentId` is not valid');
@@ -292,14 +290,14 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
 
   return checkForAdventureInDatabase(adventureId)
     .then((adventure) => {
-        return Adventure.findOne({ _id: adventureId })
-      .then( (adventure) => {
-        console.log("check for adventure: ", adventure)
-        if (adventure.head) {
-          hasHead = true
-        } else {
-          hasHead = false
-        }
+      return Adventure.findOne({ _id: adventureId })
+        .then((adventure) => {
+          console.log("check for adventure: ", adventure)
+          if (adventure.head) {
+            hasHead = true
+          } else {
+            hasHead = false
+          }
         })
     })
     .then(() => {
@@ -327,10 +325,10 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
       const nodeId = createdNode.id;
       console.log("has head is: ", hasHead)
       if (!hasHead) {
-        return Adventure.findOneAndUpdate({ _id: adventureId }, {head: _res})
-        .then((_res) => {
-          return updatePointerOnParent(parentId, parentInt, nodeId);
-        })
+        return Adventure.findOneAndUpdate({ _id: adventureId }, { head: _res })
+          .then((_res) => {
+            return updatePointerOnParent(parentId, parentInt, nodeId);
+          })
       } else {
         return updatePointerOnParent(parentId, parentInt, nodeId);
       }
@@ -477,6 +475,73 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
     })
     .then(() => {
       return Node.findByIdAndUpdate({ _id: nodeId }, nodeUpdatesAndUnsetValues, { new: true })
+    })
+    .then(result =>
+      res.json(result)
+    )
+    .catch(err => next(err))
+})
+
+// PUT Route for Adventure Starting Info
+router.put('/:id', jwtAuth, jsonParser, (req, res, next) => {
+  const adventureId = req.params.id;
+  const userId = req.user.id;
+
+  // TODO, update route for ending nodes. 
+  const updateableFields = [
+    'title',
+    'startContent',
+    'startVideoURL',
+    'password',
+  ];
+
+  const adventureUpdates = {}
+
+  if (req.body.password) {
+    adventureUpdates['hasPassword'] = true;
+  }
+
+  if (req.body.removePassword) {
+    adventureUpdates['hasPassword'] = false;
+  }
+
+  updateableFields.forEach(field => {
+    if (field in req.body) {
+      adventureUpdates[field] = req.body[field];
+    }
+  });
+
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  if (adventureUpdates.title === '') {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  if (adventureUpdates.startContent === '') {
+    const err = new Error('Missing `Adventure Info` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+
+  return checkIfUserIsAdventureOwner(userId, adventureId)
+    .then(() => {
+      if (adventureUpdates.password) {
+        return Adventure.hashPassword(adventureUpdates.password)
+          .then(hash => {
+            //after hashing the password, we store the hashed password as part of the adv obj
+            adventureUpdates.password = hash;
+            return Adventure.findByIdAndUpdate({ _id: adventureId }, adventureUpdates, { new: true })
+          })
+      } else {
+        return Adventure.findByIdAndUpdate({ _id: adventureId }, adventureUpdates, { new: true })
+      }
     })
     .then(result =>
       res.json(result)
@@ -662,13 +727,13 @@ function checkForAdventureInDatabase(adventureId) {
 
 function checkAdventureForHeadNode(adventureId) {
   return Adventure.findOne({ _id: adventureId })
-  .then( (adventure) => {
-    console.log("check for adventure: ", adventure)
-    if (adventure.head) {
-      return true
-    } else {
-      return false
-    }
+    .then((adventure) => {
+      console.log("check for adventure: ", adventure)
+      if (adventure.head) {
+        return true
+      } else {
+        return false
+      }
     })
 }
 
