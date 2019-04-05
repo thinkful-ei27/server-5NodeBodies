@@ -12,7 +12,6 @@ const mongoose = require('mongoose');
 
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
-
 //fullroute: '{BASE_URL}/api/adventure'
 
 //This is a get ALL route: Finds all adventures created by the teacher
@@ -55,7 +54,6 @@ router.get('/:id', jwtAuth, (req, res, next) => {
     })
 })
 
-
 router.get('/:adventureId/:nodeId', (req, res, next) => {
   const adventureId = req.params.adventureId;
   const nodeId = req.params.nodeId;
@@ -69,7 +67,7 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  return Node.find({ _id: nodeId })
+  return Node.findOne({ _id: nodeId })
     .then(node => {
       if (node.length === 0) {
         return Promise.reject(new Error('Node not found'))
@@ -151,7 +149,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
         //adventures with password route
         return Adventure.hashPassword(password)
           .then(hash => {
-            //after hasing the password, we store the hashed password as part of the adv obj
+            //after hashing the password, we store the hashed password as part of the adv obj
             adventureObj.password = hash;
             return Adventure.create(adventureObj);
           })
@@ -489,6 +487,73 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
     })
     .then(() => {
       return Node.findByIdAndUpdate({ _id: nodeId }, nodeUpdatesAndUnsetValues, { new: true })
+    })
+    .then(result =>
+      res.json(result)
+    )
+    .catch(err => next(err))
+})
+
+// PUT Route for Adventure Starting Info
+router.put('/:id', jwtAuth, jsonParser, (req, res, next) => {
+  const adventureId = req.params.id;
+  const userId = req.user.id;
+
+  // TODO, update route for ending nodes. 
+  const updateableFields = [
+    'title',
+    'startContent',
+    'startVideoURL',
+    'password',
+  ];
+
+  const adventureUpdates = {}
+
+  if (req.body.password) {
+    adventureUpdates['hasPassword'] = true;
+  }
+
+  if (req.body.removePassword) {
+    adventureUpdates['hasPassword'] = false;
+  }
+
+  updateableFields.forEach(field => {
+    if (field in req.body) {
+      adventureUpdates[field] = req.body[field];
+    }
+  });
+
+  if (!mongoose.Types.ObjectId.isValid(adventureId)) {
+    const err = new Error('The `adventureId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  if (adventureUpdates.title === '') {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  if (adventureUpdates.startContent === '') {
+    const err = new Error('Missing `Adventure Info` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+
+  return checkIfUserIsAdventureOwner(userId, adventureId)
+    .then(() => {
+      if (adventureUpdates.password) {
+        return Adventure.hashPassword(adventureUpdates.password)
+          .then(hash => {
+            //after hashing the password, we store the hashed password as part of the adv obj
+            adventureUpdates.password = hash;
+            return Adventure.findByIdAndUpdate({ _id: adventureId }, adventureUpdates, { new: true })
+          })
+      } else {
+        return Adventure.findByIdAndUpdate({ _id: adventureId }, adventureUpdates, { new: true })
+      }
     })
     .then(result =>
       res.json(result)
