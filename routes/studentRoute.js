@@ -31,7 +31,8 @@ router.get('/search', (req, res, next) => {
 router.get('/search/:searchTerm', (req, res, next) => {
   //It would be good to limit the data that comes back as this is just a search
   let searchTerm = req.params.searchTerm;
-  return Adventure.find({title: {$regex: searchTerm}})
+  console.log(`search term is ${searchTerm}`);
+  return Adventure.find({title: {$regex: searchTerm}}).collation({locale: 'en_US', strength: 1})
     .then(adventures => {
       if(adventures.length === 0){
         return Promise.reject(new Error('No Matching Adventures Found'));
