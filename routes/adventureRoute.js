@@ -35,6 +35,7 @@ router.get('/:id', jwtAuth, (req, res, next) => {
     err.status = 400;
     return next(err);
   }
+  
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `adventureId` is not valid');
     err.status = 400;
