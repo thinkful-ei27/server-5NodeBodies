@@ -11,8 +11,8 @@ const { Node } = require('../models/nodeModel');
 const { nodes, adventures, users } = require('../database/data');
 
 
-console.log(`Connecting to mongodb at 'mongodb://testUser:Testing123@ds223756.mlab.com:23756/adventure-learning-test'`);
-mongoose.connect('mongodb://testUser:Testing123@ds223756.mlab.com:23756/adventure-learning-test', { useNewUrlParser: true, useCreateIndex: true })
+console.log(`Connecting to mongodb at `, DATABASE_URL);
+mongoose.connect( /** this is removed to prevent accidents */, { useNewUrlParser: true, useCreateIndex: true })
   .then(() => {
     console.log('Deleting Data...');
     return mongoose.connection.db.dropDatabase();
@@ -28,9 +28,9 @@ mongoose.connect('mongodb://testUser:Testing123@ds223756.mlab.com:23756/adventur
   .then(() => {
     console.log('Seeding Database...');
     return Promise.all([
-      Node.insertMany(nodes),
-      Adventure.insertMany(adventures),
       User.insertMany(users),
+      Adventure.insertMany(adventures),
+      Node.insertMany(nodes),
     ]);
   })
   .then(results => {
