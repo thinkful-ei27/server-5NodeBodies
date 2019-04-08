@@ -82,7 +82,7 @@ describe('/api/student/', function () {
   })
 
   after(function () {
-      return Adventure.deleteMany({}) 
+      return Adventure.findOneAndDelete({_id: adventureId}) 
       .then(() => closeServer()) //Delete the adventure we created
     })
 
