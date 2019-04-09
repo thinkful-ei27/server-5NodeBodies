@@ -14,12 +14,11 @@ let token;
 let nodeId;
 
 describe('/api/student/', function () {
-
+  const username = 'exampleUser';
+  const password = 'examplePass';
+  const firstName = 'Example';
+  const lastName = 'User';
   before(function () {
-    const username = 'exampleUser';
-    const password = 'examplePass';
-    const firstName = 'Example';
-    const lastName = 'User';
     return runServer(TEST_DATABASE_URL)
     .then(() => {
       //Putting a user into the db so that we can create an adventure to use on the student route
@@ -82,7 +81,8 @@ describe('/api/student/', function () {
   })
 
   after(function () {
-      return Adventure.findOneAndDelete({_id: adventureId}) 
+      return Adventure.findOneAndDelete({_id: adventureId})
+      .then(() =>  User.findOneAndDelete({username}))
       .then(() => closeServer()) //Delete the adventure we created
     })
 
@@ -167,20 +167,7 @@ describe('/api/student/', function () {
           expect(_res.body).to.be.an('object');
           expect(_res.body).to.contain.keys('parents', 'title', 'question', 'answerB', 'answerA', 'answerC', 'answerD', 'textContent', 'ending', 'id');
           expect(_res.body.id).to.have.length(24);
-          /*
-        { parents: [ null ],
-    title: 'New Title',
-    question: 'New Test Node Question',
-    answerB: 'New Test Node Answer B',
-    answerA: 'New Test Node Answer A',
-    answerC: 'New Test Node Answer C',
-    answerD: 'New Test Node Answer D',
-    textContent: 'New Test Node Text Content',
-    ending: false,
-    id: '5cabbb05d54dba1a6c7ca1ad' }
-  */
         })
-
       })
     })
   })
