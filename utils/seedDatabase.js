@@ -12,7 +12,7 @@ const { nodes, adventures, users } = require('../database/data');
 
 
 console.log(`Connecting to mongodb at `, DATABASE_URL);
-mongoose.connect( /** this is removed to prevent accidents */, { useNewUrlParser: true, useCreateIndex: true })
+mongoose.connect( /** this is removed to prevent accidents ,*/ { useNewUrlParser: true, useCreateIndex: true })
   .then(() => {
     console.log('Deleting Data...');
     return mongoose.connection.db.dropDatabase();
