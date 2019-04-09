@@ -50,7 +50,7 @@ describe('/api/student/', function () {
       .post('/api/adventure/newAdventure')
       .set('Authorization', 'Bearer ' + token)
       .send({
-        title : 'Test  Title',
+        title : 'TestTitle',
         startContent: 'Test Starter Content',
         startVideoURL : 'https://www.youtube.com/watch?v=QtXby3twMmI'
       })
@@ -63,7 +63,7 @@ describe('/api/student/', function () {
       .post('/api/adventure/newNode')
       .set('Authorization', 'Bearer ' + token)
       .send({
-        title : 'New Title',
+        title : 'New Test Title',
         adventureId,
         question : 'New Test Node Question',
         answerB : 'New Test Node Answer B',
@@ -75,8 +75,8 @@ describe('/api/student/', function () {
       })
     })
     .then(_res => {
-      nodeId = _res.body.id
-      console.log("Node Id is: ", _res.body.id)
+      nodeId = _res.body.createdNode.id
+      console.log("Node Id is: ", nodeId)
     })
   })
 
@@ -127,7 +127,7 @@ describe('/api/student/', function () {
         expect(_res).to.have.status(200);
         expect(_res.body).to.be.an('array');
         expect(_res.body[0]).to.be.an('object');
-        expect(_res.body[0]).to.contain.keys('nodes', 'title', 'startContent', 'hasPassword', 'count', 'creatorId', 'creator', 'head', 'id');
+        expect(_res.body[0]).to.contain.keys('nodes', 'title', 'startContent', 'hasPassword', 'count', 'creatorId', 'creator', 'id');
       })
     })
 
@@ -139,7 +139,7 @@ describe('/api/student/', function () {
         expect(_res).to.have.status(200);
         expect(_res.body).to.be.an('array');
         expect(_res.body[0]).to.be.an('object');
-        expect(_res.body[0]).to.contain.keys('nodes', 'title', 'startContent', 'hasPassword', 'count', 'creatorId', 'creator', 'head', 'id');
+        expect(_res.body[0]).to.contain.keys('nodes', 'title', 'startContent', 'hasPassword', 'count', 'creatorId', 'creator', 'id');
         expect(_res.body[0].title).to.equal('Test  Title');
       })
     })
@@ -152,10 +152,11 @@ describe('/api/student/', function () {
     it('should get an adventure id from search, then access a node on that adventure', function() {
       return chai
       .request(app)
-      .get(`/api/student/search/`)
+      .get(`/api/student/search/TestTitle`)
       .then( (_res) => {
         adventureID = _res.body[0].id;
         nodeID = _res.body[0].nodes[0];
+        console.log("RES BODY IS******************", _res.body)
         return
       })
       .then(() => {
