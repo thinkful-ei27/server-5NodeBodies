@@ -35,6 +35,7 @@ router.get('/:id', jwtAuth, (req, res, next) => {
     err.status = 400;
     return next(err);
   }
+  
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `adventureId` is not valid');
     err.status = 400;
@@ -82,26 +83,63 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     })
 })
 
-function videoValidate(videoURL) {
-  let videoID;
+// function videoValidate(videoURL) {
+//   let videoID;
 
+//   if (videoURL.includes("watch")) {
+//     let indexOf = videoURL.indexOf('?v=')
+//     videoID = videoURL.slice(indexOf + 3)
+//     console.log(videoID);
+
+//   } else if (videoURL.includes("embed")) {
+//     let indexOf = videoURL.indexOf('embed/')
+//     videoID = videoURL.slice(indexOf + 6)
+//     console.log(videoID);
+//   } else if ((videoURL.includes("youtu.be"))) {
+//     let indexOf = videoURL.indexOf('.be/')
+//     videoID = videoURL.slice(indexOf + 4)
+//     console.log(videoID);
+//   }
+//   let outputString = `https://www.youtube.com/embed/${videoID}`
+//   return outputString
+// }
+
+function videoValidate(videoURL){
+  let videoID;
+  let timeStamp;
   if (videoURL.includes("watch")) {
     let indexOf = videoURL.indexOf('?v=')
     videoID = videoURL.slice(indexOf + 3)
+    console.log(videoID);
 
   } else if (videoURL.includes("embed")) {
     let indexOf = videoURL.indexOf('embed/')
     videoID = videoURL.slice(indexOf + 6)
+    console.log(videoID);
   } else if ((videoURL.includes("youtu.be"))) {
     let indexOf = videoURL.indexOf('.be/')
     videoID = videoURL.slice(indexOf + 4)
+    console.log(videoID);
   }
-
+  if(videoURL.includes("&t")){
+    let indexOf = videoURL.indexOf('&t');
+    timeStamp = '#start' + videoURL.slice(indexOf + 2);
+    timeStamp = timeStamp.slice(0, timeStamp.length - 1);
+  }
+  if(timeStamp){
+    let indexOf = videoID.indexOf('&t');
+    videoID = videoID.slice(0, indexOf);
+    console.log('videoID slice =====', videoID.slice(0, indexOf));
+    videoID = videoID + timeStamp;
+  }
+  console.log('videoID ========', videoID);
+  console.log('timeStamp ========', timeStamp);
   let outputString = `https://www.youtube.com/embed/${videoID}`
-
-
   return outputString
 }
+
+//https://www.youtube.com/watch?v=VSVbAS3K3jw&t=322s
+//the & becomes a ?, the t becomes a start 
 
 //  adventure/newAdventure route creates a new adventure document, head node, and adds the adventure
 // id to the user object.
@@ -241,7 +279,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   let hasHead;
   const userId = req.user.id;
-  const {
+  let {
     title,
     adventureId,
     parentId, // id
@@ -275,6 +313,10 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     const err = new Error('You must ask a question');
     err.status = 400;
     return next(err);
+  }
+
+  if(videoURL){
+    videoURL = videoValidate(videoURL)
   }
 
   // TODO: impliment once titles are success on front end
