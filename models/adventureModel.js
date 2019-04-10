@@ -24,8 +24,7 @@ const adventureSchema = mongoose.Schema({
   }
 });
 
-// adventure titles must be unique per userId
-adventureSchema.index({ title: 1, userId: 1 }, { unique: true }, {collation: {locale: 'en_US', strength: 2}});
+adventureSchema.index(/*{ title: 1, userId: 1 }, { unique: true },*/ {collation: {locale: 'en_US', strength: 2}});
 
 adventureSchema.statics.hashPassword = function (password) {
   return bcrypt.hash(password, 10);
