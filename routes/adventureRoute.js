@@ -680,13 +680,14 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
 // DEL an entire adventure
 router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
   const adventureId = req.params.adventureId;
+  const userId = req.user.id
+  console.log(adventureId, '++++++++++++++++++++++++++++dn;age;aghewo;aghewoa;gea')
 
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `id` is not valid');
     err.status = 400;
     return next(err);
   }
-
   return Adventure.findById(adventureId)
     .then(adventure => {
       return adventure.nodes.forEach(node => {
@@ -695,8 +696,17 @@ router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
             return;
           })
       })
-    }).then(() => {
-      return Adventure.findByIdAndDelete(adventureId);
+    })
+    .then(()=>{
+      const removeIdFromUserArray = User.updateOne(
+        { _id: userId },
+        { $pull: { adventures: adventureId } }
+      )
+      const deleteAdventure= Adventure.findByIdAndDelete(adventureId);
+      return Promise.all([
+        deleteAdventure,
+        removeIdFromUserArray
+      ])
     })
     .then(() => {
       return res.sendStatus(204);
