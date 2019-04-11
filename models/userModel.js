@@ -19,6 +19,8 @@ const UserSchema = mongoose.Schema({
   adventures: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Adventure' }]
 });
 
+// UserSchema.index({ "username": 1 }, unique: true)
+
 
 UserSchema.methods.serialize = function () {
   return {
