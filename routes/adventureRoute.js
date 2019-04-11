@@ -44,7 +44,7 @@ router.get('/:id', jwtAuth, (req, res, next) => {
   return Adventure.findOne({ creatorId: userId, _id: adventureId }).populate('nodes').populate('head')
     .then(adventure => {
       if (!adventure) {
-        return Promise.reject(new Error('Adventure not found'));
+        return Promise.reject(new Error('LearnVenture not found'));
       }
       res.json(adventure);
     }).catch(err => {
@@ -71,12 +71,12 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
   return Node.findOne({ _id: nodeId })
     .then(node => {
       if (node.length === 0) {
-        return Promise.reject(new Error('Node not found'))
+        return Promise.reject(new Error('Checkpoint not found'))
       }
       res.json(node)
     })
     .catch(err => {
-      if (err.message === 'Node not found') {
+      if (err.message === 'Checkpoint not found') {
         err.status = 404;
       }
       next(err);
@@ -152,7 +152,7 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     password } = req.body;
   let hasPassword = false;
   if (!title) {
-    const error = new Error('Please provide a title for your adventure!');
+    const error = new Error('Please provide a title for your LearnVenture!');
     error.status = 400;
     return next(error);
   }
@@ -624,7 +624,7 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
     .then((adventure) => {
 
       if (adventure.head.equals(nodeId)) {
-        const err = new Error('You cannot remove the Starting question. Try editing it instead')
+        const err = new Error('You cannot remove the Starting checkpoint. Try editing it instead')
         err.status = 400;
         return next(err);
       }
@@ -680,13 +680,13 @@ router.delete('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => 
 // DEL an entire adventure
 router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
   const adventureId = req.params.adventureId;
+  const userId = req.user.id
 
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `id` is not valid');
     err.status = 400;
     return next(err);
   }
-
   return Adventure.findById(adventureId)
     .then(adventure => {
       return adventure.nodes.forEach(node => {
@@ -695,8 +695,17 @@ router.delete('/:adventureId/', jwtAuth, jsonParser, (req, res, next) => {
             return;
           })
       })
-    }).then(() => {
-      return Adventure.findByIdAndDelete(adventureId);
+    })
+    .then(()=>{
+      const removeIdFromUserArray = User.updateOne(
+        { _id: userId },
+        { $pull: { adventures: adventureId } }
+      )
+      const deleteAdventure= Adventure.findByIdAndDelete(adventureId);
+      return Promise.all([
+        deleteAdventure,
+        removeIdFromUserArray
+      ])
     })
     .then(() => {
       return res.sendStatus(204);
@@ -771,7 +780,7 @@ function checkForAdventureInDatabase(adventureId) {
   return Adventure.findOne({ _id: adventureId })
     .then(adventure => {
       if (!adventure) {
-        const err = new Error('Adventure Id does not exist in the Database')
+        const err = new Error('LearnVenture Id does not exist in the Database')
         err.status = 400
         console.log(err)
         throw err
