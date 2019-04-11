@@ -31,7 +31,6 @@ router.get('/search', (req, res, next) => {
 router.get('/search/:searchTerm', (req, res, next) => {
   //It would be good to limit the data that comes back as this is just a search
   let searchTerm = req.params.searchTerm;
-  console.log(`search term is ${searchTerm}`);
   return Adventure.find({title: {$regex: searchTerm, $options: 'i'}}).collation({locale: 'en_US', strength: 2})
     .then(adventures => {
       if(adventures.length === 0){
@@ -49,7 +48,6 @@ router.get('/search/:searchTerm', (req, res, next) => {
 
 
 router.post('/adventure/:id', jsonParser, (req, res, next) => {
-  console.log(req.body);
   const password = req.body.password;
   const adventureId = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
@@ -61,12 +59,10 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
   return Adventure.findOne({_id: adventureId})
   .then(result => {
     adventure = result;
-    console.log(adventure, 'This is adventure');
     if(adventure.length === 0){
       return Promise.reject(new Error('Adventure not found'));
     }
     if(adventure.hasPassword){
-      console.log('Comparing passwords... user submission is:', password);
       if (password === undefined){
         return Promise.reject({
           reason: 'PasswordError',
@@ -76,7 +72,6 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
       return adventure.validatePassword(password)
         .then(isValid => {
           if(!isValid){
-            console.log('PASSWORD IS NOT VALID!')
             return Promise.reject({
               reason: 'PasswordError',
               message: 'Incorrect Password'
@@ -87,17 +82,13 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
     }})
     .then(() => {
       if (adventure.count) {
-        console.log('adventure does have a count!');
         return Adventure.findByIdAndUpdate(adventureId, {count : (adventure.count + 1)})
       } else {
-        console.log('this is adventure', adventure);
         return Adventure.findByIdAndUpdate(adventureId, {count :  1})
       }
     })
     .then(node => {
-      console.log('Node ran!');
-      console.log(node)
-      res.json(node)
+     return res.json(node)
     })
     .catch(err => {
       if(err.message === 'Adventure not found'){
@@ -140,9 +131,7 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     if (node.length === 0){
       return Promise.reject(new Error ('Node not found'))
     }
-    console.log(node)
     let nodeId = req.params.nodeId;
-    console.log(nodeId)
     if (node.count) {
       return Node.findByIdAndUpdate(nodeId, {count : (node.count + 1)})
     } else {
@@ -150,8 +139,7 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     }
    })
    .then(node => {
-     console.log(node)
-     res.json(node)
+    return res.json(node)
    })
   .catch(err => {
     if(err.message === 'Node not found'){
