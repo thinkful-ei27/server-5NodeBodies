@@ -133,8 +133,8 @@ const nodes = [
       "5ca8f7b6c13a5f124cd6effc"//
     ],
     "title" : "Serial",
-    "textContent" : "Instead of making breakfast, You end up binge watching the whole first season before you know it, subsising on water crackers, and water.  it was worth it. psst, there are three seasons!",
-    "videoURL" : "https://www.youtube.com/embed/nMSxiHuDa00&list=PLYApml9ZfRZ4aap6-vl9-hSHjcXUU4FK-",
+    "textContent" : "Instead of making breakfast, You end up binge listening to the whole first season before you know it, subsising on water crackers, and water.  it was worth it. psst, there are three seasons!",
+    "videoURL" : "https://www.youtube.com/embed/nMSxiHuDa00",
     "ending" : true,
     "__v" : 0
   },
