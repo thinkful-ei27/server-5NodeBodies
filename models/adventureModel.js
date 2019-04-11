@@ -17,19 +17,20 @@ const adventureSchema = mongoose.Schema({
   nodes: [
     { type: mongoose.Schema.Types.ObjectId, ref: 'Node' }
   ],
-  count: {type: Number},
+  count: { type: Number },
   hasPassword: { type: Boolean },
   password: {
     type: String
   }
-});
+},
+);
 
-adventureSchema.index(/*{ title: 1, userId: 1 }, { unique: true },*/ {collation: {locale: 'en_US', strength: 2}});
+adventureSchema.index({ title: 1 }, { collation: { locale: 'en_US', strength: 2 } });
 
 adventureSchema.statics.hashPassword = function (password) {
   return bcrypt.hash(password, 10);
 };
- 
+
 adventureSchema.methods.validatePassword = function (password) {
   return bcrypt.compare(password, this.password);
 };
