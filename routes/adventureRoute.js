@@ -468,6 +468,10 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
     }
   });
 
+  if(nodeUpdates.videoURL){
+    nodeUpdates.videoURL = videoValidate(nodeUpdates.videoURL)
+  }
+
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `adventureId` is not valid');
     err.status = 400;
@@ -564,6 +568,14 @@ router.put('/:id', jwtAuth, jsonParser, (req, res, next) => {
       adventureUpdates[field] = req.body[field];
     }
   });
+
+  console.log(adventureUpdates)
+
+  if(adventureUpdates.startVideoURL){
+    adventureUpdates.startVideoURL = videoValidate(adventureUpdates.startVideoURL)
+  }
+
+  console.log(adventureUpdates)
 
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `adventureId` is not valid');
