@@ -42,7 +42,7 @@ const nodes = [
     ],
     "title" : "Planetary destruction",
     "textContent" : "you destroyed millenia of society and millions of years of biodiversity because you  are inflexible when science tells you that continued unrestricted consumption of petroleum products will be devastating for future generations' life outcomes .\nThe 100 years of modern society was worth it though perhaps.  ",
-    "videoURL" : "https://www.youtube.com/watch?v=hllU9NEcJyg",
+    "videoURL" : "https://www.youtube.com/embed/hllU9NEcJyg",
     "ending" : true,
     "__v" : 0
   },
@@ -70,7 +70,7 @@ const nodes = [
     ],
     "title" : "gas explosion",
     "textContent" : "After 45 minutes of browsing the internet for memes, you realize what you smell is gas. just then there is a loud boom. when you come to, you and your dog are uninjured, but there is a crater where your kitchen used to be, and you are still hungry.",
-    "videoURL" : "https://www.youtube.com/watch?v=dmO4wRxtkHE",
+    "videoURL" : "https://www.youtube.com/embed/dmO4wRxtkHE",
     "ending" : true,
     "__v" : 0
   },
@@ -133,8 +133,8 @@ const nodes = [
       "5ca8f7b6c13a5f124cd6effc"//
     ],
     "title" : "Serial",
-    "textContent" : "Instead of making breakfast, You end up binge watching the whole first season before you know it, subsising on water crackers, and water.  it was worth it. psst, there are three seasons!",
-    "videoURL" : "https://www.youtube.com/watch?v=nMSxiHuDa00&list=PLYApml9ZfRZ4aap6-vl9-hSHjcXUU4FK-",
+    "textContent" : "Instead of making breakfast, You end up binge listening to the whole first season before you know it, subsising on water crackers, and water.  it was worth it. psst, there are three seasons!",
+    "videoURL" : "https://www.youtube.com/embed/nMSxiHuDa00",
     "ending" : true,
     "__v" : 0
   },
@@ -163,7 +163,7 @@ const nodes = [
     ],
     "title" : "Cereal",
     "textContent" : "you sit down at the table, eat your bowl of raisin bran or frosted flakes or chex or whatever, and think about how summers around the corner, and it's a nice day.",
-    "videoURL" : "https://www.youtube.com/watch?v=low6Coqrw9Y",
+    "videoURL" : "https://www.youtube.com/embed/low6Coqrw9Y",
     "ending" : true,
     "__v" : 0
   },
@@ -190,7 +190,7 @@ const nodes = [
     ],
     "title" : "Park",
     "textContent" : "You grab a leash and walk your dog to the park . you bring a book and buy a gyro. its a good day",
-    "videoURL" : "https://www.youtube.com/watch?v=RUfqm71vfkk",
+    "videoURL" : "https://www.youtube.com/embed/RUfqm71vfkk",
     "ending" : true,
     "count" : 1,
     "__v" : 0
@@ -202,7 +202,7 @@ const nodes = [
     ],
     "title" : "movie",
     "textContent" : "you sneak the dog a cracker or two and decide itll be a lazy day, so you cuddle up and watch a movie",
-    "videoURL" : "https://www.youtube.com/watch?v=g-xEi1qDS74",
+    "videoURL" : "https://www.youtube.com/embed/g-xEi1qDS74",
     "ending" : true,
     "__v" : 0
   },
@@ -213,7 +213,7 @@ const nodes = [
     ],
     "title" : "store",
     "textContent" : "you leave to go get eggs, but then decide to go to the bar for bloody marys instead. there was a group of people who were celebrating a birthday and taking tequila shots. you joined in. not sure what happened after that but it was a good time.",
-    "videoURL" : "https://www.youtube.com/watch?v=12UiEh2dFE8",
+    "videoURL" : "https://www.youtube.com/embed/12UiEh2dFE8",
     "ending" : true,
     "__v" : 0
   },
@@ -242,7 +242,7 @@ const nodes = [
     ],
     "title" : "Epic meal",
     "textContent" : "you make an epic meal and end up having enough biscuts left over for the next week. better buy some jam!",
-    "videoURL" : "https://www.youtube.com/watch?v=jQX2kC1jUB8&list=PL84FBB60DFE42481F&index=61",
+    "videoURL" : "https://www.youtube.com/embed/jQX2kC1jUB8&list=PL84FBB60DFE42481F&index=61",
     "ending" : true,
     "count" : 1,
     "__v" : 0
@@ -254,7 +254,7 @@ const nodes = [
     ],
     "title" : "flapjacks",
     "textContent" : "You flippin, you flapin, and you trickin with the jacks!",
-    "videoURL" : "https://www.youtube.com/watch?v=JRz4rO6mxEI",
+    "videoURL" : "https://www.youtube.com/embed/JRz4rO6mxEI",
     "ending" : true,
     "__v" : 0
   },
@@ -265,7 +265,7 @@ const nodes = [
     ],
     "title" : "butterflies ",
     "textContent" : "nature is cool, you can eat some food later!",
-    "videoURL" : "https://www.youtube.com/watch?v=T9sz9QzsWXc",
+    "videoURL" : "https://www.youtube.com/embed/T9sz9QzsWXc",
     "ending" : true,
     "__v" : 0
   }

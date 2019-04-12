@@ -83,26 +83,6 @@ router.get('/:adventureId/:nodeId', (req, res, next) => {
     })
 })
 
-// function videoValidate(videoURL) {
-//   let videoID;
-
-//   if (videoURL.includes("watch")) {
-//     let indexOf = videoURL.indexOf('?v=')
-//     videoID = videoURL.slice(indexOf + 3)
-//     console.log(videoID);
-
-//   } else if (videoURL.includes("embed")) {
-//     let indexOf = videoURL.indexOf('embed/')
-//     videoID = videoURL.slice(indexOf + 6)
-//     console.log(videoID);
-//   } else if ((videoURL.includes("youtu.be"))) {
-//     let indexOf = videoURL.indexOf('.be/')
-//     videoID = videoURL.slice(indexOf + 4)
-//     console.log(videoID);
-//   }
-//   let outputString = `https://www.youtube.com/embed/${videoID}`
-//   return outputString
-// }
 
 function videoValidate(videoURL){
   let videoID;
@@ -110,16 +90,13 @@ function videoValidate(videoURL){
   if (videoURL.includes("watch")) {
     let indexOf = videoURL.indexOf('?v=')
     videoID = videoURL.slice(indexOf + 3)
-    console.log(videoID);
 
   } else if (videoURL.includes("embed")) {
     let indexOf = videoURL.indexOf('embed/')
     videoID = videoURL.slice(indexOf + 6)
-    console.log(videoID);
   } else if ((videoURL.includes("youtu.be"))) {
     let indexOf = videoURL.indexOf('.be/')
     videoID = videoURL.slice(indexOf + 4)
-    console.log(videoID);
   }
   if(videoURL.includes("&t")){
     let indexOf = videoURL.indexOf('&t');
@@ -129,11 +106,8 @@ function videoValidate(videoURL){
   if(timeStamp){
     let indexOf = videoID.indexOf('&t');
     videoID = videoID.slice(0, indexOf);
-    console.log('videoID slice =====', videoID.slice(0, indexOf));
     videoID = videoID + timeStamp;
   }
-  console.log('videoID ========', videoID);
-  console.log('timeStamp ========', timeStamp);
   let outputString = `https://www.youtube.com/embed/${videoID}`
   return outputString
 }
@@ -182,7 +156,6 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
     .then(_res => {
       //we grab the users current list of adventures and store for later
       adventureArray = _res.adventures
-      console.log(adventureArray);
       if (password) {
         //adventures with password route
         return Adventure.hashPassword(password)
@@ -196,20 +169,18 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
         return Adventure.create(adventureObj)
       }
     }).then(adventure => {
-      console.log('adventure is... ', adventure)
       adventureId = adventure._id;
       return User.findOneAndUpdate({ _id: userId }, { adventures: [...adventureArray, adventureId] })
     }).then(_res => {
-      console.log('_res after findOneAndUpdate is...', _res);
       return Adventure.findById(adventureId).populate('nodes').populate('head')
     }).then(result => {
-      console.log('result is... ', result);
       return res.json(result);
     }).catch(err => {
-      if (err.code === 11000) {
-        err = new Error('You already have an Adventure with this title. Pick a unique title!');
-        err.status = 400;
-      }
+      // does not require unique titles at the moment
+      // if (err.code === 11000) {
+      //   err = new Error('You already have an Adventure with this title. Pick a unique title!');
+      //   err.status = 400;
+      // }
       next(err);
     })
 
@@ -217,65 +188,6 @@ router.post('/newAdventure', jwtAuth, jsonParser, (req, res, next) => {
 
 })
 
-/*return createNewNode(headNode)
-    .then((_res) => {
-      if (_res) {
-
-        const nodeId = _res.id
-        //somehow we have to hash the password and store it in the adventureObj
-        const adventureObj = {
-          title,
-          startContent,
-          startVideoURL,
-          head: nodeId,
-          nodes: [nodeId],
-          creator: username,
-          creatorId: userId,
-          hasPassword
-        }
-        console.log(adventureObj);
-        //If a password exists, we hash it to store the hash instead of plaintext
-        if (password) {
-          return Adventure.hashPassword(password)
-            .then(hash => {
-              adventureObj.password = hash;
-              return Adventure.create(adventureObj);
-            })
-        } else {
-          //Adventures with no password route
-          return Adventure.create(adventureObj)
-        }
-      } else next();
-    })
-    .then((_res) => {
-      if (_res) {
-        adventureId = _res.id
-        adventure = _res
-        return User.findOne({ _id: userId })
-      } else next();
-    })
-    .then((_res) => {
-      const adventureArr = _res.adventures
-      return User.findOneAndUpdate(
-        { _id: userId },
-        { adventures: [...adventureArr, adventureId] }
-      )
-    })
-    .then((_res) => {
-      return Adventure.findOne({ _id: adventureId }).populate('nodes').populate('head')
-    })
-    .then((_res) => {
-      return res.json(_res)
-    })
-    .catch(err => {
-      if (err.code === 11000) {
-        err = new Error('You already have an Adventure with this title. Pick a unique title!');
-        err.status = 400;
-      }
-      next(err);
-    });*/
-
-// TODO change this route to include adventureID in url
 router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
   let hasHead;
   const userId = req.user.id;
@@ -292,17 +204,8 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     videoURL,
     textContent,
     ending } = req.body;
-  console.log(adventureId)
-
-  // check if parent id is a valid id
-  // if (!mongoose.Types.ObjectId.isValid(parentId) && !checkAdventureForHeadNode(adventureId)) { //David removed this becuase, IF it is a head node it WON'T have a parent and the boolean wouldn't play nice
-  //   const err = new Error('The `parentId` is not valid');
-  //   err.status = 400;
-  //   return next(err);
-  // }
 
   // checks if  adventure Id is a valid id
-  console.log(adventureId)
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `adventureId` is not valid');
     err.status = 400;
@@ -321,20 +224,12 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
 
   // TODO: impliment once titles are success on front end
 
-
-  // if (!title || title === '') {
-  //   const err = new Error('Please provide a title, It will help for adventure build navigation');
-  //   err.status = 400;
-  //   return next(err);
-  // }
-
   let createdNode;
 
   return checkForAdventureInDatabase(adventureId)
     .then((adventure) => {
       return Adventure.findOne({ _id: adventureId })
         .then((adventure) => {
-          console.log("check for adventure: ", adventure)
           if (adventure.head) {
             hasHead = true
           } else {
@@ -365,7 +260,6 @@ router.post('/newNode', jwtAuth, jsonParser, (req, res, next) => {
     .then((_res) => {
       createdNode = _res;
       const nodeId = createdNode.id;
-      console.log("has head is: ", hasHead)
       if (!hasHead) {
         return Adventure.findOneAndUpdate({ _id: adventureId }, { head: _res })
           .then((_res) => {
@@ -423,7 +317,6 @@ router.post('/linkNodes', jwtAuth, jsonParser, (req, res, next) => {
     })
     .then((childNode) => {
       const parents = childNode.parents;
-      console.log(parents)
       return Node.findOneAndUpdate({ _id: childId },
         { parents: [...parents, parentId] }, { new: true })
     })
@@ -467,6 +360,10 @@ router.put('/:adventureId/:nodeId', jwtAuth, jsonParser, (req, res, next) => {
       nodeUpdates[field] = req.body[field];
     }
   });
+
+  if(nodeUpdates.videoURL){
+    nodeUpdates.videoURL = videoValidate(nodeUpdates.videoURL)
+  }
 
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `adventureId` is not valid');
@@ -565,6 +462,9 @@ router.put('/:id', jwtAuth, jsonParser, (req, res, next) => {
     }
   });
 
+  if(adventureUpdates.startVideoURL){
+    adventureUpdates.startVideoURL = videoValidate(adventureUpdates.startVideoURL)
+  }
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
     const err = new Error('The `adventureId` is not valid');
     err.status = 400;
@@ -782,7 +682,6 @@ function checkForAdventureInDatabase(adventureId) {
       if (!adventure) {
         const err = new Error('LearnVenture Id does not exist in the Database')
         err.status = 400
-        console.log(err)
         throw err
       } else return adventure
     });
@@ -791,7 +690,6 @@ function checkForAdventureInDatabase(adventureId) {
 function checkAdventureForHeadNode(adventureId) {
   return Adventure.findOne({ _id: adventureId })
     .then((adventure) => {
-      console.log("check for adventure: ", adventure)
       if (adventure.head) {
         return true
       } else {
@@ -807,7 +705,6 @@ function checkForParentInDatabase(parentId) {
       if (!parent) {
         const err = new Error('the parent Id does not exist in the Database')
         err.status = 400
-        console.log(err)
         throw err
       } else return;
     });
