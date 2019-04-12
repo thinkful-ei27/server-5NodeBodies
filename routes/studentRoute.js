@@ -93,7 +93,6 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
      return res.json(node)
     })
     .catch(err => {
-      console.log(err);
       if(err.message === 'Adventure not found'){
         err.status = 404;
       }
