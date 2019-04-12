@@ -61,8 +61,8 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
     adventure = result;
     if(!adventure){
       return Promise.reject({
-        reason: 'Adventure not found',
-        message: 'Adventure not found'});
+        reason: 'LearnVenture not found',
+        message: 'LearnVenture not found'});
     }
     if(adventure.hasPassword){
       if (password === undefined){
