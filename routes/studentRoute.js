@@ -51,7 +51,7 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
   const password = req.body.password;
   const adventureId = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
-    const err = new Error('The `adventureId` is not valid');
+    const err = new Error('The `LearnVentureID` is not valid');
     err.status = 400;
     return next(err);
   }
