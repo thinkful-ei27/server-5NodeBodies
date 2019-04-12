@@ -59,8 +59,10 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
   return Adventure.findOne({_id: adventureId})
   .then(result => {
     adventure = result;
-    if(adventure.length === 0){
-      return Promise.reject(new Error('Adventure not found'));
+    if(!adventure){
+      return Promise.reject({
+        reason: 'Adventure not found',
+        message: 'Adventure not found'});
     }
     if(adventure.hasPassword){
       if (password === undefined){
@@ -91,6 +93,7 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
      return res.json(node)
     })
     .catch(err => {
+      console.log(err);
       if(err.message === 'Adventure not found'){
         err.status = 404;
       }
