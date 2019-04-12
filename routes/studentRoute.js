@@ -51,7 +51,7 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
   const password = req.body.password;
   const adventureId = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(adventureId)) {
-    const err = new Error('The `adventureId` is not valid');
+    const err = new Error('The `LearnVentureID` is not valid');
     err.status = 400;
     return next(err);
   }
@@ -59,8 +59,10 @@ router.post('/adventure/:id', jsonParser, (req, res, next) => {
   return Adventure.findOne({_id: adventureId})
   .then(result => {
     adventure = result;
-    if(adventure.length === 0){
-      return Promise.reject(new Error('Adventure not found'));
+    if(!adventure){
+      return Promise.reject({
+        reason: 'LearnVenture not found',
+        message: 'LearnVenture not found'});
     }
     if(adventure.hasPassword){
       if (password === undefined){
